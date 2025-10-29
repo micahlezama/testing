@@ -65,7 +65,7 @@ class GameAccount:
         json_data = json.dumps({
             'unique_id': self.unique_id,
             'identifier': self.identifier,
-            'platform': config.game_env.name
+            'platform': config.game_platform.name
         })
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(json_data, encoding='utf8')
@@ -73,7 +73,7 @@ class GameAccount:
     @staticmethod
     def from_file(file_path: Path) -> 'GameAccount':
         json_data = json.loads(file_path.read_bytes())
-        config.game_platform = config.IOS_PLATFORM if json_data['platform'] == config.IOS_PLATFORM.name else config.ANDROID_PLATFORM
+        config.game_platform = config.IOS_PLATFORM
         return GameAccount(
             unique_id=json_data['unique_id'],
             identifier=json_data['identifier'],

@@ -15,9 +15,10 @@ from services.stage import StageService
 NAME = 'stage'
 DESCRIPTION = 'Completes the given stage'
 CONTEXT = [config.GameContext.GAME]
-
+DLTM = 20
 
 def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
+
     try:
         stage: Optional[models.game.Quests] = models.game.Quests.get_by_id(stage_id)
     except Exception as error:
@@ -81,8 +82,14 @@ def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
             for j in dec_sign['sugoroku']['events'][i]['content']['battle_info']:
                 defeated.append(j['round_id'])
 
-    finish_time = int(round(time.time(), 0) + 2000)
-    start_time = finish_time - randint(6200000, 8200000)
+    start_time = round(time.time())
+
+    tts = randint(DLTM, DLTM + 10)
+    time.sleep(tts)
+
+    finish_time = round(time.time())
+
+    #start_time = finish_time - randint(6200000, 8200000)
     damage = randint(500000, 1000000)
 
     # Hercule punching bag event damage
@@ -107,6 +114,7 @@ def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
         'steps': steps,
         'token': dec_sign['token'],
     }
+
 
     enc_sign = crypto.encrypt_sign(json.dumps(sign))
     r = network.post_quests_sugoroku_finish(stage_id, enc_sign)

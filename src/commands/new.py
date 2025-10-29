@@ -29,6 +29,7 @@ def run(file_name: str):
         return None
 
     webbrowser.open(req['captcha_url'], new=2)
+    print(req)
     captcha_session_key = req['captcha_session_key']
     print('Opening captcha in browser. Press' + Fore.RED + Style.BRIGHT + ' ENTER ' + Style.RESET_ALL + 'once you have solved it...')
     input()
@@ -38,6 +39,7 @@ def run(file_name: str):
         captcha_session_key=captcha_session_key
     )
 
+    print(req)
     identifier = base64.b64decode(req['identifier']).decode('utf-8')
     config.game_account = GameAccount(
         unique_id=unique_id,

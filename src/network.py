@@ -1,5 +1,6 @@
 import json
 import urllib.parse
+import time
 from typing import Optional, Any
 
 import requests
@@ -264,8 +265,9 @@ def get_resources_login(
 
 
 def get_quests_supporters(stage_id: int, difficulty: int, team_num: int):
-    params = {'difficulty': difficulty, 'team_num': team_num}
-    return __get('/quests/' + str(stage_id) + '/supporters', params=params)
+    params = {'difficulty': difficulty, 'force_update':'', 'team_num': team_num}
+    lqs = __get('/quests/' + str(stage_id) + '/briefing', params=params)
+    return lqs
 
 
 def get_rmbattles(clash_id: str):
@@ -345,7 +347,7 @@ def post_auth_signup(
 
     data = __purge_none({
         'bundle_id': config.game_env.bundle_id,
-        'device_token': 'failed' if captcha_session_key is None else None,
+        'device_token': 'failed' if captcha_session_key is None else captcha_session_key,
         'reason': 'NETWORK_ERROR: null' if captcha_session_key is None else None,
         'captcha_session_key': captcha_session_key,
         'user_account': {
@@ -373,16 +375,20 @@ def post_auth_signin(
 ):
     data = json.dumps(__purge_none({
         'bundle_id': config.game_env.bundle_id,
-        'device_token': 'failed' if captcha_session_key is None else None,
+        'device_token': 'failed' if captcha_session_key is None else captcha_session_key,
         'reason': 'NETWORK_ERROR: null' if captcha_session_key is None else None,
         'captcha_session_key': captcha_session_key,
         'user_account': {
             'ad_id': '',
             'device': config.game_platform.device_name,
             'device_model': config.game_platform.device_model,
+            "graphics_api": "vulkan1.1.0,gles3.1",
+            "is_usable_astc": True,
+            "os_architecture": "x86_64,x86,arm64-v8a,armeabi-v7a,armeabi",
             'os_version': config.game_platform.os_version,
             'platform': config.game_platform.name,
             'unique_id': unique_id,
+            'voice': 'ja'
         }
     }))
 
@@ -403,6 +409,74 @@ def post_auth_signin(
     __print_response(res)
     return res.json()
 
+def request_token(code: str):
+    token_url = 'https://oauth2.googleapis.com/token' 
+    google_client_id = '33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com'
+    payload = {
+                'audience': '33528429135-tosmtg8e15lp4l2bulmj8nc5un2ba7s3.apps.googleusercontent.com',
+                'client_id': google_client_id,
+                'code': code,
+                'grant_type': 'authorization_code',
+                'redirect_uri': 'com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh:/oauth2callback'
+            }
+            
+    try:
+        headers = {
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Length': '378',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Host': 'oauth2.googleapis.com',
+            'User-Agent': config.game_platform.user_agent
+        }
+        response = requests.post(token_url, headers=headers, data=payload)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+        token_data = response.json()
+        
+    except requests.exceptions.RequestException as e:
+        print(f"\n--- Error during token exchange: {e} ---")
+    
+    return token_data["id_token"]
+
+
+def post_auth_link(token: str, validate: bool=False, uid: str=''):
+    data = json.dumps({
+        'token':token
+    })
+
+    headers = __purge_none({
+        'User-Agent': config.game_platform.user_agent,
+        'Accept': '*/*',
+        'Content-type': 'application/json',
+        'X-ClientVersion': config.game_env.version_code,
+        'X-Language': 'en',
+        'X-UserCountry': config.game_env.country,
+        'X-UserCurrency': config.game_env.currency,
+        'X-Platform': config.game_platform.name,
+    })
+
+    url = 'https://ishin-global.aktsk.com/user/succeed/google'
+    if validate:
+        url = url + '/validate'
+        res = requests.post(url, headers=headers, data=data)
+    else:
+        data = {
+            'token': token,
+            'user_account': {
+                "device": config.game_platform.device_name,
+                "device_model": config.game_platform.device_model, 
+                "os_version": config.game_platform.os_version,
+                "platform": config.game_platform.name, 
+                "unique_id": uid 
+            }
+        }
+        data = json.dumps(data)
+        res = requests.put(url, headers=headers, data=data)
+
+    res.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+    return res.json()
 
 def post_login_bonuses_accept():
     return __post('/login_bonuses/accept')
@@ -520,9 +594,19 @@ def post_dragonball_sets_wishes(set: str, dragonball_wish_ids: list[int]):
 def post_user_capacity_card():
     return __post('/user/capacity/card')
 
-
 def post_cards_sell(card_ids: list):
-    return __post('/cards/sell', {'card_ids': card_ids})
+    endpoint = '/cards/sell'
+    headers = __generate_headers('POST', endpoint)
+    payload = {'card_ids': card_ids}
+    url = config.game_env.url + endpoint
+    print("[DEBUG] URL:", url)
+    print("[DEBUG] Headers:", headers)
+    print("[DEBUG] Payload:", payload)
+    res = requests.post(url, headers=headers, data=json.dumps(payload))
+    print("[DEBUG] Response text:", res.text)
+    __print_response(res)
+    return res.json() if res.status_code != 204 else None
+
 
 
 def post_awakening_item_exchange(awakening_item_id: int, quantity: int):
