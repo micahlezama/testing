@@ -16,10 +16,10 @@ ROOT_DIR: Path = Path(path.dirname(path.abspath(__file__))).parent
 
 ANDROID_PLATFORM = GamePlatform(
     name='android',
-    user_agent='Dalvik/2.1.0 (Linux; Android 7.0; SM-E7000)',
-    device_name='SM',
-    device_model='SM-E7000',
-    os_version='7.0'
+    user_agent='Dalvik/2.1.0 (Linux; U; Android 9; V2307A Build/PQ3A.190705.09121607)',
+    device_name='vivo',
+    device_model='vulkan1.1.0,gles3.1',
+    os_version='9.0'
 )
 
 IOS_PLATFORM = GamePlatform(
@@ -35,11 +35,11 @@ GB_ENV = GameEnvironment(
     bundle_id='com.bandainamcogames.dbzdokkanww',
     url='https://ishin-global.aktsk.com',
     port=443,
-    version_code='5.12.0-347d017198077f9178e5b41d7437d9353d8e5162dcbae24764a520d87c289bae',
+    version_code='5.30.0-64ded1ee77dc357657d66b9167cf0ed34418d097f8b0688dbfc64220274685d4',
     db_password=bytearray('9bf9c6ed9d537c399a6c4513e92ab24717e1a488381e3338593abd923fc8a13b'.encode('utf8')),
     db_path=Path(ROOT_DIR, 'data/gb.db'),
-    country='FR',
-    currency='EUR'
+    country='US',
+    currency='USD'
 )
 
 JP_ENV = GameEnvironment(
@@ -62,7 +62,7 @@ class GameContext(Enum):
 
 client: ClientConfig = ClientConfig(path=Path(ROOT_DIR, 'config.json'))
 game_env: GameEnvironment = GB_ENV
-game_platform: GamePlatform = ANDROID_PLATFORM
+game_platform: GamePlatform = ANDROID_PLATFORM 
 game_account: Optional[GameAccount] = None
 game_context: GameContext = GameContext.AUTH
 

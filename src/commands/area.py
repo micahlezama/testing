@@ -19,8 +19,7 @@ def run(area_id: int):
     i = 1
     for quest in quests:
         sugorokus: list[models.game.SugorokuMaps] = models.game.SugorokuMaps.select().where(models.game.SugorokuMaps.quest_id == quest.id)
-        difficulties = []
         for sugoroku in sugorokus:
-            print('Completion of area:', str(i) + '/' + str(total), '(' + str(round((i / total) * 100)) + '%)')
+            print('Completion of map:', str(i) + '/' + str(total), '(' + str(round((i / total) * 100)) + '%)')
             stage.run(quest.id, sugoroku.difficulty)
             i += 1

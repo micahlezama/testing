@@ -1,5 +1,6 @@
 import json
 import urllib.parse
+import time
 from typing import Optional, Any
 
 import requests
@@ -10,6 +11,9 @@ import config
 import crypto
 from classes.Game import GamePlatform
 
+from seleniumwire import webdriver
+from selenium.webdriver.chrome.options import Options
+import selenium.webdriver.support.ui as ui
 
 def __generate_headers(
         method: str,
@@ -264,8 +268,9 @@ def get_resources_login(
 
 
 def get_quests_supporters(stage_id: int, difficulty: int, team_num: int):
-    params = {'difficulty': difficulty, 'team_num': team_num}
-    return __get('/quests/' + str(stage_id) + '/supporters', params=params)
+    params = {'difficulty': difficulty, 'force_update':'', 'team_num': team_num}
+    lqs = __get('/quests/' + str(stage_id) + '/briefing', params=params)
+    return lqs
 
 
 def get_rmbattles(clash_id: str):
@@ -345,7 +350,7 @@ def post_auth_signup(
 
     data = __purge_none({
         'bundle_id': config.game_env.bundle_id,
-        'device_token': 'failed' if captcha_session_key is None else None,
+        'device_token': 'failed' if captcha_session_key is None else captcha_session_key,
         'reason': 'NETWORK_ERROR: null' if captcha_session_key is None else None,
         'captcha_session_key': captcha_session_key,
         'user_account': {
@@ -373,16 +378,20 @@ def post_auth_signin(
 ):
     data = json.dumps(__purge_none({
         'bundle_id': config.game_env.bundle_id,
-        'device_token': 'failed' if captcha_session_key is None else None,
+        'device_token': 'failed' if captcha_session_key is None else captcha_session_key,
         'reason': 'NETWORK_ERROR: null' if captcha_session_key is None else None,
         'captcha_session_key': captcha_session_key,
         'user_account': {
             'ad_id': '',
             'device': config.game_platform.device_name,
             'device_model': config.game_platform.device_model,
+            "graphics_api": "vulkan1.1.0,gles3.1",
+            "is_usable_astc": True,
+            "os_architecture": "x86_64,x86,arm64-v8a,armeabi-v7a,armeabi",
             'os_version': config.game_platform.os_version,
             'platform': config.game_platform.name,
             'unique_id': unique_id,
+            'voice': 'ja'
         }
     }))
 
@@ -403,6 +412,121 @@ def post_auth_signin(
     __print_response(res)
     return res.json()
 
+
+GURL = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com&redirect_uri=com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh%3A%2Foauth2callback&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgames&prompt=consent&hl=en-US"
+
+def get_gtoken():
+    return request_gtoken(google_login())
+
+def google_login():
+    code = None
+
+    opts = Options()
+    opts.add_argument('user-agent=Mozilla/5.0 (Linux; Android 12; moto g 5G (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36 ')
+    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+    opts.add_experimental_option('useAutomationExtension', False)
+    opts.add_argument('--disable-blink-features=AutomationControlled')
+    opts.add_argument("--disable-logging")
+    opts.add_argument("--log-level=3")
+    opts.add_argument(f'--app={GURL}')
+
+    driver = webdriver.Chrome(options=opts)
+
+    try:
+
+        wait = ui.WebDriverWait(driver, 6000)
+        wait.until(lambda d: d.requests[-1].url.startswith("https://accounts.google.com/signin/oauth/consent/approval?authuser=0") or
+                             d.current_url.startswith("https://www.google.com"))
+
+        for request in driver.requests:
+            if request.url.startswith("https://accounts.google.com/signin/oauth/consent/approval?authuser=0"):
+                content = request.response.body
+                code = crypto.decode_gcode(content)
+    except Exception as e:
+        print("[Error]", e)
+
+    driver.quit()
+    return code 
+
+def request_gtoken(code: str):
+    token_url = 'https://oauth2.googleapis.com/token' 
+    google_client_id = '33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com'
+    payload = {
+                'audience': '33528429135-tosmtg8e15lp4l2bulmj8nc5un2ba7s3.apps.googleusercontent.com',
+                'client_id': google_client_id,
+                'code': code,
+                'grant_type': 'authorization_code',
+                'redirect_uri': 'com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh:/oauth2callback'
+            }
+            
+    try:
+        headers = {
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Length': '378',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Host': 'oauth2.googleapis.com',
+            'User-Agent': config.game_platform.user_agent
+        }
+        response = requests.post(token_url, headers=headers, data=payload)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+        token_data = response.json()
+        
+    except requests.exceptions.RequestException as e:
+        print(f"\n--- Error during token exchange: {e} ---")
+    
+    return token_data["id_token"]
+
+
+def post_link(token: str):
+    data = json.dumps({
+        'token':token
+    })
+    headers = __generate_headers('POST', '/user/link/google')
+    url = 'https://ishin-global.aktsk.com/user/link/google'
+    res = requests.post(url, headers=headers, data=data)
+    res.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+    return res.json()
+
+
+def post_auth_link(token: str, validate: bool=False, uid: str=''):
+    data = json.dumps({
+        'token':token
+    })
+
+    headers = __purge_none({
+        'User-Agent': config.game_platform.user_agent,
+        'Accept': '*/*',
+        'Content-type': 'application/json',
+        'X-ClientVersion': config.game_env.version_code,
+        'X-Language': 'en',
+        'X-UserCountry': config.game_env.country,
+        'X-UserCurrency': config.game_env.currency,
+        'X-Platform': config.game_platform.name,
+    })
+
+    url = 'https://ishin-global.aktsk.com/user/succeed/google'
+    if validate:
+        url = url + '/validate'
+        res = requests.post(url, headers=headers, data=data)
+    else:
+        data = {
+            'token': token,
+            'user_account': {
+                "device": config.game_platform.device_name,
+                "device_model": config.game_platform.device_model, 
+                "os_version": config.game_platform.os_version,
+                "platform": config.game_platform.name, 
+                "unique_id": uid 
+            }
+        }
+        data = json.dumps(data)
+        res = requests.put(url, headers=headers, data=data)
+
+    res.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+    return res.json()
 
 def post_login_bonuses_accept():
     return __post('/login_bonuses/accept')

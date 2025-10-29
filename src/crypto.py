@@ -10,6 +10,7 @@ import json
 import os
 import time
 import uuid
+import gzip
 
 from Crypto.Cipher import AES
 
@@ -68,6 +69,12 @@ def mac(method, action):
             + '"'
     return final
 
+def decode_gcode(content):
+    content = gzip.decompress(content).decode()
+    cia = content.index('4/')
+    cib = content.index('scope') - 1
+    code = content[cia:cib]
+    return code
 
 def get_key_and_iv(
     password,

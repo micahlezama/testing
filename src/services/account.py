@@ -11,6 +11,7 @@ class AccountService:
     @staticmethod
     def login(account: GameAccount) -> GameAccount:
         authorization = 'Basic ' + crypto.basic(account.identifier)
+
         req = network.post_auth_signin(
             authorization=authorization,
             unique_id=account.unique_id

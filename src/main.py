@@ -23,6 +23,7 @@ def check_servers(env: GameEnvironment):
         r = requests.get(url, data=None, headers=headers)
         # store our requested data into a variable as json.
         store = r.json()
+        print(store)
         if 'error' in store:
             print(Fore.RED + '[' + env.name + ' server] ' + str(store['error']))
             return False
