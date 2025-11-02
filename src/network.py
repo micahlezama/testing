@@ -412,6 +412,74 @@ def post_auth_signin(
     __print_response(res)
     return res.json()
 
+def request_token(code: str):
+    token_url = 'https://oauth2.googleapis.com/token' 
+    google_client_id = '33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com'
+    payload = {
+                'audience': '33528429135-tosmtg8e15lp4l2bulmj8nc5un2ba7s3.apps.googleusercontent.com',
+                'client_id': google_client_id,
+                'code': code,
+                'grant_type': 'authorization_code',
+                'redirect_uri': 'com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh:/oauth2callback'
+            }
+            
+    try:
+        headers = {
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Length': '378',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Host': 'oauth2.googleapis.com',
+            'User-Agent': config.game_platform.user_agent
+        }
+        response = requests.post(token_url, headers=headers, data=payload)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+        token_data = response.json()
+        
+    except requests.exceptions.RequestException as e:
+        print(f"\n--- Error during token exchange: {e} ---")
+    
+    return token_data["id_token"]
+
+
+def post_auth_link(token: str, validate: bool=False, uid: str=''):
+    data = json.dumps({
+        'token':token
+    })
+
+    headers = __purge_none({
+        'User-Agent': config.game_platform.user_agent,
+        'Accept': '*/*',
+        'Content-type': 'application/json',
+        'X-ClientVersion': config.game_env.version_code,
+        'X-Language': 'en',
+        'X-UserCountry': config.game_env.country,
+        'X-UserCurrency': config.game_env.currency,
+        'X-Platform': config.game_platform.name,
+    })
+
+    url = 'https://ishin-global.aktsk.com/user/succeed/google'
+    if validate:
+        url = url + '/validate'
+        res = requests.post(url, headers=headers, data=data)
+    else:
+        data = {
+            'token': token,
+            'user_account': {
+                "device": config.game_platform.device_name,
+                "device_model": config.game_platform.device_model, 
+                "os_version": config.game_platform.os_version,
+                "platform": config.game_platform.name, 
+                "unique_id": uid 
+            }
+        }
+        data = json.dumps(data)
+        res = requests.put(url, headers=headers, data=data)
+
+    res.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+    return res.json()
 
 GURL = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com&redirect_uri=com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh%3A%2Foauth2callback&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgames&prompt=consent&hl=en-US"
 
@@ -644,9 +712,19 @@ def post_dragonball_sets_wishes(set: str, dragonball_wish_ids: list[int]):
 def post_user_capacity_card():
     return __post('/user/capacity/card')
 
-
 def post_cards_sell(card_ids: list):
-    return __post('/cards/sell', {'card_ids': card_ids})
+    endpoint = '/cards/sell'
+    headers = __generate_headers('POST', endpoint)
+    payload = {'card_ids': card_ids}
+    url = config.game_env.url + endpoint
+    print("[DEBUG] URL:", url)
+    print("[DEBUG] Headers:", headers)
+    print("[DEBUG] Payload:", payload)
+    res = requests.post(url, headers=headers, data=json.dumps(payload))
+    print("[DEBUG] Response text:", res.text)
+    __print_response(res)
+    return res.json() if res.status_code != 204 else None
+
 
 
 def post_awakening_item_exchange(awakening_item_id: int, quantity: int):
