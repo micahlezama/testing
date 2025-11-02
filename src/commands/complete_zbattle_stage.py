@@ -10,11 +10,16 @@ import config
 import crypto
 import network
 
-from commands.act import refill_stamina_command
+from commands.act import run as refill_stamina
 
 
-def complete_zbattle_stage_command(kagi=False):
+NAME = 'zbattle'
+DESCRIPTION = 'Complete Selected ZBattle Stage'
+CONTEXT = [config.GameContext.GAME]
+
+def run():
     events = network.get_events()
+    kagi = False
 
     zbattles_to_display = []
     for event in events['z_battle_stages']:
@@ -93,7 +98,7 @@ def complete_zbattle_stage_command(kagi=False):
                     if r['error']['code'] == 'act_is_not_enough':
                         # Check if allowed to refill stamina
                         if config.allow_stamina_refill == True:
-                            refill_stamina_command()
+                            refill_stamina()
                             r = network.post_zbattles_start(str(stage), enc_sign)
                     else:
                         print(r)
