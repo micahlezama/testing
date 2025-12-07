@@ -1,6 +1,6 @@
 pyinstaller
 colorama
 pyCryptodome
-PySimpleGUI
+FreeSimpleGUI
 requests
 peewee

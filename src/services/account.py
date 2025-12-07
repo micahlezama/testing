@@ -9,6 +9,7 @@ class AccountService:
     @staticmethod
     def login(account: GameAccount) -> GameAccount:
         authorization = 'Basic ' + crypto.basic(account.identifier)
+        nonce = crypto.nonce()
 
         print(f"[DEBUG] Attempting login for {account.identifier}")
         print(f"[DEBUG] Unique ID: {account.unique_id}")
@@ -17,6 +18,7 @@ class AccountService:
         try:
             req = network.post_auth_signin(
                 authorization=authorization,
+                nonce=nonce,
                 unique_id=account.unique_id
             )
         except Exception as e:
@@ -46,6 +48,7 @@ class AccountService:
                 req = network.post_auth_signin(
                     authorization=authorization,
                     unique_id=account.unique_id,
+                    nonce=nonce,
                     captcha_session_key=captcha_session_key
                 )
             except Exception as e:

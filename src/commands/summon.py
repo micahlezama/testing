@@ -1,4 +1,4 @@
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from colorama import Back, Fore, Style
 from commands.game.get_remaining_stones import get_remaining_stones_command
 

@@ -3,10 +3,11 @@ import json
 import time
 from random import randint
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from colorama import Fore, Style
 
 import config
+from models import game 
 import crypto
 import network
 
@@ -19,13 +20,13 @@ CONTEXT = [config.GameContext.GAME]
 
 def run():
     events = network.get_events()
-    kagi = False
+    kagi = False 
 
     zbattles_to_display = []
     for event in events['z_battle_stages']:
-        zbattle = config.ZBattles.where('z_battle_stage_id', '=', event['id']).first().enemy_name + ' | ' + str(
-            event['id'])
+        zbattle = game.ZBattleStageViews.select().where(game.ZBattleStageViews.z_battle_stage_id == int(event['id']))[0].enemy_name + ' | ' + str(event['id'])
         zbattles_to_display.append(zbattle)
+    
 
     col1 = [[sg.Text('Select a Z-Battle', font=('', 15, 'bold'))],
             [sg.Listbox(values=(zbattles_to_display), size=(30, 15), key='ZBATTLE', font=('', 15, 'bold'))]]
@@ -57,10 +58,10 @@ def run():
                 level = values['LEVEL']
 
                 ##Get supporters
-                r = network.get_zbattles_supporters(str(stage))
+                r = network.get_zbattles_supporters(str(stage), int(level), 1)
                 if 'supporters' in r:
                     supporter = r['supporters'][0]['id']
-                    leader = r['supporters'][0]['card_id']
+                    leader = r['supporters'][0]['leader']
                 elif 'error' in r:
                     print(Fore.RED + Style.BRIGHT + r)
                     return 0
@@ -76,16 +77,14 @@ def run():
                         'level': int(level),
                         'selected_team_num': int(config.deck),
                         'eventkagi_item_id': 5,
-                        'support_leader': {'card_id': int(leader), 'exp': 0, 'optimal_awakening_step': 0,
-                                           'released_rate': 0}
+                        'support_leader': leader
                     })
                 else:
                     sign = json.dumps({
                         'friend_id': int(supporter),
                         'level': int(level),
                         'selected_team_num': int(config.deck),
-                        'support_leader': {'card_id': int(leader), 'exp': 0, 'optimal_awakening_step': 0,
-                                           'released_rate': 0}
+                        'support_leader': leader
                     })
 
                 enc_sign = crypto.encrypt_sign(sign)
@@ -230,49 +229,38 @@ def run():
                         else:
                             print(x['item_type'])
 
-                    # Print items
-                    for x in supportitemsset:
-                        config.SupportItems.find_or_fail(x).name
+                for x in supportitemsset:
+                    support_item: game.SupportItems = game.SupportItems.get_by_id(x)
+                    print(Fore.CYAN + Style.BRIGHT + support_item.name + ' x' + str(supportitems.count(x)))
 
-                        # Print name and item count
-                        print(Fore.CYAN + Style.BRIGHT + config.SupportItems.find(x).name + ' x' \
-                              + str(supportitems.count(x)))
-                    for x in awakeningitemsset:
-                        config.AwakeningItems.find_or_fail(x).name
+                for x in awakeningitemsset:
+                    awakening_item: game.AwakeningItems = game.AwakeningItems.get_by_id(x)
+                    print(Fore.MAGENTA + Style.BRIGHT + awakening_item.name + ' x' + str(
+                        awakeningitems.count(x)))
 
-                        # Print name and item count
-                        print(Fore.MAGENTA + Style.BRIGHT + config.AwakeningItems.find(x).name + ' x' \
-                              + str(awakeningitems.count(x)))
-                    for x in trainingitemsset:
-                        config.TrainingItems.find_or_fail(x).name
+                for x in trainingitemsset:
+                    training_item: game.TrainingItems = game.TrainingItems.get_by_id(x)
+                    print(Fore.RED + Style.BRIGHT + training_item.name + ' x' + str(trainingitems.count(x)))
 
-                        # Print name and item count
-                        print(Fore.RED + Style.BRIGHT + config.TrainingItems.find(x).name + ' x' \
-                              + str(trainingitems.count(x)))
-                    for x in potentialitemsset:
-                        config.PotentialItems.find_or_fail(x).name
+                for x in potentialitemsset:
+                    potential_item: game.PotentialItems = game.PotentialItems.get_by_id(x)
+                    print(potential_item.name + ' x' + str(potentialitems.count(x)))
 
-                        # Print name and item count
-                        print(config.PotentialItems.find_or_fail(x).name + ' x' \
-                              + str(potentialitems.count(x)))
-                    for x in treasureitemsset:
-                        config.TreasureItems.find_or_fail(x).name
+                for x in treasureitemsset:
+                    treasure_item: game.TreasureItems = game.TreasureItems.get_by_id(x)
+                    print(
+                        Fore.GREEN + Style.BRIGHT + treasure_item.name + ' x' + str(treasureitems.count(x)))
 
-                        # Print name and item count
-                        print(Fore.GREEN + Style.BRIGHT + config.TreasureItems.find(x).name + ' x' \
-                              + str(treasureitems.count(x)))
-                    for x in trainingfieldsset:
-                        config.TrainingFields.find_or_fail(x).name
+                for x in trainingfieldsset:
+                    training_field: game.TrainingFields = game.TrainingFields.get_by_id(x)
+                    print(training_field.name + ' x' + str(trainingfields.count(x)))
 
-                        # Print name and item count
-                        print(config.TrainingFields.find(x).name + ' x' \
-                              + str(trainingfields.count(x)))
-                    for x in carditemsset:
-                        config.Cards.find_or_fail(x).name
+                for x in carditemsset:
+                    card: game.Cards = game.Cards.get_by_id(x)
+                    print(card.name + ' x' + str(carditems.count(x)))
 
-                        # Print name and item count
-                        print(config.Cards.find(x).name + ' x' + str(carditems.count(x)))
-                    print(Fore.YELLOW + Style.BRIGHT + 'Stones x' + str(stones))
+                print(Fore.YELLOW + Style.BRIGHT + 'Stones x' + str(stones))
+
                 if 'gasha_point' in dec_sign:
                     print('Friend Points: ' + str(dec_sign['gasha_point']))
 

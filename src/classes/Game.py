@@ -73,7 +73,7 @@ class GameAccount:
     @staticmethod
     def from_file(file_path: Path) -> 'GameAccount':
         json_data = json.loads(file_path.read_bytes())
-        config.game_platform = config.IOS_PLATFORM
+        config.game_platform = config.IOS_PLATFORM if json_data['platform'] == 'ios' else config.ANDROID_PLATFORM
         return GameAccount(
             unique_id=json_data['unique_id'],
             identifier=json_data['identifier'],

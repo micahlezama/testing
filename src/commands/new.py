@@ -22,7 +22,8 @@ def run(file_name: str):
         return
 
     unique_id = crypto.generate_unique_id()
-    req = network.post_auth_signup(unique_id=unique_id)
+    nonce = crypto.nonce()
+    req = network.post_auth_signup(unique_id=unique_id, nonce=nonce)
 
     if 'captcha_url' not in req:
         print(Fore.RED + Style.BRIGHT + 'Captcha could not be loaded...')
@@ -36,6 +37,7 @@ def run(file_name: str):
 
     req = network.post_auth_signup(
         unique_id=unique_id,
+        nonce=nonce,
         captcha_session_key=captcha_session_key
     )
 

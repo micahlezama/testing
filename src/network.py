@@ -285,8 +285,9 @@ def get_rmbattles_teams(team_id: str):
     return __get('/rmbattles/teams/' + team_id)
 
 
-def get_zbattles_supporters(stage_id: str):
-    return __get('/z_battles/' + stage_id + '/supporters')
+def get_zbattles_supporters(stage_id: str, level: int, team_num: int):
+    params = {'level': level, 'force_update':'', 'team_num': team_num}
+    return __get('/z_battles/' + stage_id + '/briefing', params=params)
 
 
 def get_item_reverse_resolutions_awakening_items():
@@ -338,6 +339,7 @@ def put_card_favorite(card_id: int, is_favorite: bool):
 
 def post_auth_signup(
         unique_id: str,
+        nonce: str,
         captcha_session_key: Optional[str] = None
 ):
     headers = {
@@ -349,9 +351,10 @@ def post_auth_signup(
     }
 
     data = __purge_none({
+        "auth_transaction_id": nonce,
         'bundle_id': config.game_env.bundle_id,
         'device_token': 'failed' if captcha_session_key is None else captcha_session_key,
-        'reason': 'NETWORK_ERROR: null' if captcha_session_key is None else None,
+        'reason': 'unknown status code: -17' if captcha_session_key is None else None,
         'captcha_session_key': captcha_session_key,
         'user_account': {
             'ad_id': '',
@@ -374,9 +377,11 @@ def post_auth_signup(
 def post_auth_signin(
         authorization: str,
         unique_id: str,
+        nonce: str,
         captcha_session_key: Optional[str] = None
 ):
     data = json.dumps(__purge_none({
+        "auth_transaction_id": nonce,
         'bundle_id': config.game_env.bundle_id,
         'device_token': 'failed' if captcha_session_key is None else captcha_session_key,
         'reason': 'NETWORK_ERROR: null' if captcha_session_key is None else None,

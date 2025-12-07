@@ -35,7 +35,7 @@ GB_ENV = GameEnvironment(
     bundle_id='com.bandainamcogames.dbzdokkanww',
     url='https://ishin-global.aktsk.com',
     port=443,
-    version_code='5.31.0-bc2dbb3aae762739778feb359c70f4bd27f44aac7256fb0e1a70197119930f6b',
+    version_code='5.31.5-911d3743330c12b2d082e33dd8b15d571000e49668f8d3e7134a79c23cda0d4c',
     db_password=bytearray('9bf9c6ed9d537c399a6c4513e92ab24717e1a488381e3338593abd923fc8a13b'.encode('utf8')),
     db_path=Path(ROOT_DIR, 'data/gb.db'),
     country='US',
@@ -62,7 +62,7 @@ class GameContext(Enum):
 
 client: ClientConfig = ClientConfig(path=Path(ROOT_DIR, 'config.json'))
 game_env: GameEnvironment = GB_ENV
-game_platform: GamePlatform = IOS_PLATFORM 
+game_platform: GamePlatform = IOS_PLATFORM
 game_account: Optional[GameAccount] = None
 game_context: GameContext = GameContext.AUTH
 

@@ -54,6 +54,10 @@ def basic(identifier):
     return base64.b64encode(temp.encode()).decode()
 
 
+def nonce():
+    ts = str(int(round(time.time(), 0)))
+    return ts + ':' + str(hashlib.md5(ts.encode()).hexdigest())
+
 def mac(method, action):
     ts = str(int(round(time.time(), 0)))
     nonce = ts + ':' + str(hashlib.md5(ts.encode()).hexdigest())

@@ -2615,6 +2615,7 @@ class ZBattleStageViews(BaseModel):
 
 
 class ZBattleStages(BaseModel):
+    id = IntegerField(null=True)
     announcement_id = IntegerField(null=True)
     banner_image_path = CharField(null=True)
     danger_line_hp = IntegerField(constraints=[SQL("DEFAULT 0")])
