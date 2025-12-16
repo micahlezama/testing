@@ -36,7 +36,7 @@ def run():
         sugorokus = list(models.game.SugorokuMaps.select().where(models.game.SugorokuMaps.quest_id == quest.id))
 
         for sugoroku in sugorokus:
-            stage_id = int(sugoroku.id)
+            stage_id = int(quest.id)
 
             # === Skip cleared quests ===
             if stage_id in cleared_ids:

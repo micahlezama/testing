@@ -21,7 +21,7 @@ class StageService:
 
         if not isinstance(r, dict):
     
-            print("[DEBUG supporters]", r)
+            #print("[DEBUG supporters]", r)
 
             return None
         if "error" in r:
