@@ -1,64 +1,87 @@
 import network
 import config
+import sqlite3
 
+# Command metadata
 NAME = "sell cards"
-DESCRIPTION = "Sell selected cards in batches of 99"
+DESCRIPTION = "Automatically sell low-rarity cards (N, R, SR) to clean up your box."
 CONTEXT = [config.GameContext.GAME]
 
-def run(card_list):
-    # Handle case where the user passed a single ID (string)
-    if isinstance(card_list, str):
-        card_list = [card_list]
 
-    # Convert all IDs to integers and skip invalid ones
-    try:
-        card_list = [int(x) for x in card_list if str(x).isdigit()]
-    except ValueError:
-        print("Invalid card IDs provided.")
+def run():
+    print("[Sell Junk] Fetching your cards...")
+    data = network.get_cards()
+    if not data:
+        print("No cards found.")
         return
 
-    if not card_list:
-        print("No valid card IDs provided.")
+    # Some API responses use { "cards": [...] } structure.
+    cards = data.get("cards") if isinstance(data, dict) else data
+    if not isinstance(cards, list):
+        print("Unexpected card data format.")
         return
 
-    cards_to_sell = []
-    i = 0
+    sell_ids = []
+    conn = sqlite3.connect(config.game_env.db_path)
+    cursor = conn.cursor()
 
-    for card in card_list:
-        i += 1
-        cards_to_sell.append(card)
+    # Loop through each card you own
+    for card in cards:
+        if not isinstance(card, dict):
+            continue
 
-        # Sell cards in batches of 99 (API limit)
-        if i == 99:
-            r = network.post_cards_sell(cards_to_sell)
-            print(f"Sold Cards x{len(cards_to_sell)}")
-            _handle_sell_response(r)
-            i = 0
-            cards_to_sell[:] = []
+        # Find the card's base rarity using local database
+        cursor.execute("SELECT rarity FROM cards WHERE id = ?", (card["card_id"],))
+        row = cursor.fetchone()
 
-    # Sell leftover cards (if any)
-    if i != 0:
-        r = network.post_cards_sell(cards_to_sell)
-        print(f"Sold Cards x{len(cards_to_sell)}")
-        _handle_sell_response(r)
+        # Add N, R, and SR cards to the sell list
+        if row and row[0] in ["N", "R", "SR"]:
+            sell_ids.append(card["id"])
 
+    conn.close()
 
-def _handle_sell_response(response):
-    """Handles API response and displays useful info."""
-    if not response:
-        print("⚠️ No response from server.")
+    # Nothing to sell? Exit early
+    if not sell_ids:
+        print("✅ No low-rarity cards found.")
         return
 
-    # Handle API error codes
-    if 'error' in response:
-        print(f"❌ Error: {response['error'].get('code', 'unknown_error')}")
+    print(f"[Sell Junk] Found {len(sell_ids)} low-rarity cards to sell (N/R/SR).")
+    confirm = input("Are you sure you want to sell them all? (yes/no): ")
+    if confirm.lower() != "yes":
+        print("Cancelled.")
         return
 
-    # Show success details
-    gain_zeni = response.get('gain_zeni', 0)
-    new_total = response.get('zeni', None)
+    total_sold = 0
+    total_zeni_gained = 0
+    latest_balance = None
 
-    if gain_zeni or new_total:
-        print(f"✅ Gained {gain_zeni:,} Zeni. New balance: {new_total:,}")
-    else:
-        print("✅ Cards sold successfully.")
+    # Sell in safe batches of 99
+    for i in range(0, len(sell_ids), 99):
+        batch = sell_ids[i:i + 99]
+        print(f"Selling batch of {len(batch)} cards...")
+        response = network.post_cards_sell(batch)
+
+        if not response:
+            print("⚠️ No response from server.")
+            continue
+
+        if "error" in response:
+            print(f"❌ Error: {response['error'].get('code', 'unknown_error')}")
+            continue
+
+        # Track Zeni rewards
+        gained = response.get("gain_zeni", 0)
+        total_zeni_gained += gained
+        latest_balance = response.get("zeni", latest_balance)
+        total_sold += len(batch)
+
+        print(f"✅ Sold {len(batch)} cards (+{gained:,} Zeni)")
+
+    # Summary at the end
+    print("\n===== Sell Summary =====")
+    print(f"💰 Total cards sold: {total_sold}")
+    print(f"💴 Total Zeni gained: {total_zeni_gained:,}")
+    if latest_balance is not None:
+        print(f"📦 New total Zeni: {latest_balance:,}")
+    print("=========================")
+    print("✅ All junk cards sold successfully!\n")

@@ -266,12 +266,35 @@ def get_resources_login(
     'missions': str(missions).lower(),
 })
 
-
 def get_quests_supporters(stage_id: int, difficulty: int, team_num: int):
-    params = {'difficulty': difficulty, 'force_update':'', 'team_num': team_num}
-    lqs = __get('/quests/' + str(stage_id) + '/briefing', params=params)
-    return lqs
+    params = {'difficulty': difficulty, 'force_update': '', 'team_num': team_num}
+    r = __get(f'/quests/{stage_id}/briefing', params)
 
+    # Normalize structure so StageService never crashes
+    if "error" in r:
+        return {
+            "supporters": [],
+            "cpu_supporters": {},
+            "error": r["error"]
+        }
+
+    if "supporters" not in r:
+        r["supporters"] = []
+
+    if "cpu_supporters" not in r:
+        r["cpu_supporters"] = {}
+
+    return r
+def get_quests():
+    data = __get('/user_areas')
+    quests = []
+    for area in data.get("user_areas", []):
+        for m in area.get("user_sugoroku_maps", []):
+            quests.append({
+                "id": m["sugoroku_map_id"],
+                "is_cleared": m.get("cleared_count", 0) > 0
+            })
+    return {"quests": quests}
 
 def get_rmbattles(clash_id: str):
     return __get('/rmbattles/' + clash_id)

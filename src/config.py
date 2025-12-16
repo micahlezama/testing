@@ -16,10 +16,10 @@ ROOT_DIR: Path = Path(path.dirname(path.abspath(__file__))).parent
 
 ANDROID_PLATFORM = GamePlatform(
     name='android',
-    user_agent='Dalvik/2.1.0 (Linux; U; Android 9; V2307A Build/PQ3A.190705.09121607)',
-    device_name='vivo',
-    device_model='vulkan1.1.0,gles3.1',
-    os_version='9.0'
+    user_agent='Dalvik/2.1.0 (Linux; U; Android 11; Pixel 5 Build/RQ3A.210805.001.A1)',
+    device_name='Google',
+    device_model='Pixel 5',
+    os_version='11'
 )
 
 IOS_PLATFORM = GamePlatform(

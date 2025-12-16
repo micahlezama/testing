@@ -17,20 +17,31 @@ DESCRIPTION = 'Completes the given stage'
 CONTEXT = [config.GameContext.GAME]
 DLTM = 20
 
-def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
 
+def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
+    """Completes a stage with the given ID and difficulty."""
+
+    # --- Convert CLI string arguments to integers safely ---
+    try:
+        stage_id = int(stage_id)
+        difficulty = int(difficulty)
+    except ValueError:
+        print(Fore.RED + "[Stage] Invalid arguments: stage_id and difficulty must be numbers." + Style.RESET_ALL)
+        return 0
+
+    # --- Fetch quest info ---
     try:
         stage: Optional[models.game.Quests] = models.game.Quests.get_by_id(stage_id)
     except Exception as error:
-        print(error)
-        print('Does this quest exist ?')
-        return
+        print(Fore.RED + f"[Stage] Error: {error}" + Style.RESET_ALL)
+        print("[Stage] Does this quest exist?")
+        return 0
 
-    print('Begin stage: ' + stage.name + ' ' + str(stage_id) + ' | Difficulty: ' + str(difficulty) + ' Deck: ' + str(config.deck))
-    # Begin timer for overall stage completion, rounded to second.
+    print(f"Begin stage: {stage.name} {stage_id} | Difficulty: {difficulty} Deck: {config.deck}")
+
     timer_start = int(round(time.time(), 0))
 
-    # Form First Request
+    # --- Get friend and sign info for starting the quest ---
     friend = StageService.get_friend(stage_id, difficulty)
     sign = StageService.get_sign(
         friend=friend,
@@ -42,85 +53,106 @@ def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
     enc_sign = crypto.encrypt_sign(json.dumps(sign))
     r = network.post_quests_sugoroku_start(stage_id, enc_sign)
 
-    # Form second request
-    # Time for request sent
-
-    if 'sign' in r:
-        dec_sign = crypto.decrypt_sign(r['sign'])
-    elif 'error' in r:
-        print(Fore.RED + Style.BRIGHT + str(r['error']))
-        # Check if error was due to lack of stamina
-        if r['error']['code'] == 'act_is_not_enough':
-            # Check if allowed to refill stamina
-            if config.allow_stamina_refill:
-                act.run()
-                r = network.post_quests_sugoroku_start(stage_id, enc_sign)
-            else:
-                print(Fore.RED + Style.BRIGHT + 'Stamina refill not allowed.')
-                return 0
-        elif r['error']['code'] == 'active_record/record_not_found':
-            return 0
-        elif r['error']['code'] == 'invalid_area_conditions_potential_releasable':
-            print(Fore.RED + Style.BRIGHT + 'You do not meet the conditions to complete potential events')
-            return 0
-        else:
-            print(Fore.RED + Style.BRIGHT + str(r['error']))
-            return 0
-    else:
-        print(Fore.RED + Style.BRIGHT + str(r))
+    # --- Handle possible API responses ---
+    if not isinstance(r, dict):
+        print(Fore.RED + f"[Stage] Unexpected response type: {type(r)}" + Style.RESET_ALL)
         return 0
 
-    if 'sign' in r:
-        dec_sign = crypto.decrypt_sign(r['sign'])
+    if "sign" in r:
+        dec_sign = crypto.decrypt_sign(r["sign"])
+    elif "error" in r:
+        err = r["error"]
+        err_code = err.get("code", "unknown_error") if isinstance(err, dict) else str(err)
+        print(Fore.RED + f"[Stage] Error: {err}" + Style.RESET_ALL)
+        print(Fore.RED + f"[Stage] Error code: {err_code}" + Style.RESET_ALL)
 
-    # Retrieve possible tile steps from response
+        # --- Handle specific known errors ---
+        if err_code == "act_is_not_enough":
+            if config.allow_stamina_refill:
+                act.run()
+                print("[Stage] Retrying after stamina refill...")
+                return run(stage_id, difficulty, kagi)
+            else:
+                print(Fore.RED + "[Stage] Stamina refill not allowed." + Style.RESET_ALL)
+                return 0
+
+        elif err_code == "the_number_of_cards_must_be_less_than_or_equal_to_the_capacity":
+            # Trigger auto cleanup hook if available
+            try:
+                from commands.autocleanup import auto_sell_junk
+                print("[Stage] ⚠️ Card box full — running cleanup.")
+                auto_sell_junk()
+            except Exception as cleanup_error:
+                print(Fore.RED + f"[Stage] Auto-cleanup failed: {cleanup_error}" + Style.RESET_ALL)
+            return 0
+
+        elif err_code == "invalid_token":
+            print(Fore.YELLOW + "[Stage] Token invalid — please re-login." + Style.RESET_ALL)
+            return 0
+
+        elif err_code == "active_record/record_not_found":
+            print(Fore.RED + "[Stage] Quest not found." + Style.RESET_ALL)
+            return 0
+
+        elif err_code == "invalid_area_conditions_potential_releasable":
+            print(Fore.RED + "[Stage] You do not meet the conditions for this event." + Style.RESET_ALL)
+            return 0
+
+        else:
+            print(Fore.RED + f"[Stage] Unhandled error: {err_code}" + Style.RESET_ALL)
+            return 0
+    else:
+        print(Fore.RED + f"[Stage] Invalid response: {r}" + Style.RESET_ALL)
+        return 0
+
+    # --- Normal stage completion flow ---
     steps = []
     defeated = []
-    for i in dec_sign['sugoroku']['events']:
+    for i in dec_sign["sugoroku"]["events"]:
         steps.append(i)
-        if 'battle_info' in dec_sign['sugoroku']['events'][i]['content']:
-            for j in dec_sign['sugoroku']['events'][i]['content']['battle_info']:
-                defeated.append(j['round_id'])
+        event_data = dec_sign["sugoroku"]["events"][i]["content"]
+        if "battle_info" in event_data:
+            for j in event_data["battle_info"]:
+                defeated.append(j["round_id"])
 
     start_time = round(time.time())
-
     tts = randint(DLTM, DLTM + 10)
     time.sleep(tts)
-
     finish_time = round(time.time())
-
-    #start_time = finish_time - randint(6200000, 8200000)
     damage = randint(500000, 1000000)
 
-    # Hercule punching bag event damage
-    if str(stage_id)[0:3] in ('711', '185', '186', '187'):
+    # Hercule punching bag event high damage
+    if str(stage_id)[:3] in ("711", "185", "186", "187"):
         damage = randint(100000000, 101000000)
 
+    # Prepare finish payload
     sign = {
-        'actual_steps': steps,
-        'difficulty': difficulty,
-        'elapsed_time': finish_time - start_time,
-        'energy_ball_counts_in_boss_battle': [4, 6, 0, 6, 4, 3, 0, 0, 0, 0, 0, 0, 0, ],
-        'has_player_been_taken_damage': False,
-        'is_cheat_user': False,
-        'is_cleared': True,
-        'is_defeated_boss': True,
-        'is_player_special_attack_only': True,
-        'max_damage_to_boss': damage,
-        'min_turn_in_boss_battle': len(defeated),
-        'passed_round_ids': defeated,
-        'quest_finished_at_ms': finish_time,
-        'quest_started_at_ms': start_time,
-        'steps': steps,
-        'token': dec_sign['token'],
+        "actual_steps": steps,
+        "difficulty": difficulty,
+        "elapsed_time": finish_time - start_time,
+        "energy_ball_counts_in_boss_battle": [4, 6, 0, 6, 4, 3, 0, 0, 0, 0, 0, 0, 0],
+        "has_player_been_taken_damage": False,
+        "is_cheat_user": False,
+        "is_cleared": True,
+        "is_defeated_boss": True,
+        "is_player_special_attack_only": True,
+        "max_damage_to_boss": damage,
+        "min_turn_in_boss_battle": len(defeated),
+        "passed_round_ids": defeated,
+        "quest_finished_at_ms": finish_time,
+        "quest_started_at_ms": start_time,
+        "steps": steps,
+        "token": dec_sign["token"],
     }
-
 
     enc_sign = crypto.encrypt_sign(json.dumps(sign))
     r = network.post_quests_sugoroku_finish(stage_id, enc_sign)
-    dec_sign = crypto.decrypt_sign(r['sign'])
-    StageService.print_rewards(dec_sign)
 
-    timer_finish = int(round(time.time(), 0))
-    timer_total = timer_finish - timer_start
-    print(Fore.GREEN + Style.BRIGHT + 'Completed stage ' + str(stage_id) + ' in ' + str(timer_total) + ' seconds')
+    if "sign" in r:
+        dec_sign = crypto.decrypt_sign(r["sign"])
+        StageService.print_rewards(dec_sign)
+
+    timer_total = int(round(time.time(), 0)) - timer_start
+    print(Fore.GREEN + Style.BRIGHT + f"Completed stage {stage_id} in {timer_total} seconds" + Style.RESET_ALL)
+
+    return 1
