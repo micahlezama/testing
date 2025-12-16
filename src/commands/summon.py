@@ -1,12 +1,15 @@
 import FreeSimpleGUI as sg
 from colorama import Back, Fore, Style
-from commands.game.get_remaining_stones import get_remaining_stones_command
 
 import config
 import network
+from config import GameContext
 
+NAME = 'summon'
+DESCRIPTION = 'Summon from available gashas'
+CONTEXT = [GameContext.GAME]
 
-def summon_command():
+def run():
     r = network.get_gashas()
     gashas = []
     for gasha in r['gashas']:
@@ -108,4 +111,5 @@ def summon_command():
                 window.UnHide()
                 window.Refresh()
 
-            print('------------------- Stones remaining: ' + get_remaining_stones_command())
+            user = network.get_user()
+            print('------------------- Stones remaining: ' + str(user['user']['stone']))
