@@ -1,7 +1,5 @@
-from commands.game.refresh_client import refresh_client_command
-
 import network
-from commands.stage import complete_stage_command
+from commands.stage import run as run_stage
 
 
 # noinspection SyntaxError
@@ -26,7 +24,7 @@ def complete_unfinished_quest_stages_command():
     while i == 0:
         # print(maps)
         for map in maps:
-            complete_stage_command(str(map['sugoroku_map_id'])[:-1], str(map['sugoroku_map_id'])[-1])
+            run_stage(str(map['sugoroku_map_id'])[:-1], str(map['sugoroku_map_id'])[-1])
 
         maps_check = []
         for user in r['user_areas']:
@@ -37,5 +35,4 @@ def complete_unfinished_quest_stages_command():
             i = 1
         else:
             maps = maps_check
-            refresh_client_command()
     return 1

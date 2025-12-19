@@ -1,12 +1,15 @@
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from colorama import Back, Fore, Style
-from commands.game.get_remaining_stones import get_remaining_stones_command
 
-import config
+from models import game 
 import network
+from config import GameContext
 
+NAME = 'summon'
+DESCRIPTION = 'Summon from available gashas'
+CONTEXT = [GameContext.GAME]
 
-def summon_command():
+def run():
     r = network.get_gashas()
     gashas = []
     for gasha in r['gashas']:
@@ -36,32 +39,31 @@ def summon_command():
                         return 0
                     card_list = []
                     for card in r['gasha_items']:
-                        config.Cards.find_or_fail(int(card['item_id'])).rarity
+                        game.Cards.get_by_id(int(card['item_id'])).rarity
 
-                        if config.Cards.find(int(card['item_id'])).rarity == 0:
+                        if game.Cards.get_by_id(int(card['item_id'])).rarity == 0:
                             rarity = Fore.RED + Style.BRIGHT + 'N' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 1:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 1:
                             rarity = Fore.RED + Style.BRIGHT + 'R' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 2:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 2:
                             rarity = Fore.RED + Style.BRIGHT + 'SR' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 3:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 3:
                             rarity = Fore.BLUE + Back.WHITE + Style.BRIGHT + 'SSR' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 4:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 4:
                             rarity = Fore.MAGENTA + Style.BRIGHT + 'UR' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 5:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 5:
                             rarity = Fore.CYAN + 'LR' + Style.RESET_ALL
-                        if str(config.Cards.find(int(card['item_id'])).element)[-1] == '0':
+                        if str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '0':
                             type = Fore.CYAN + Style.BRIGHT + 'AGL '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '1':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '1':
                             type = Fore.GREEN + Style.BRIGHT + 'TEQ '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '2':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '2':
                             type = Fore.MAGENTA + Style.BRIGHT + 'INT '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '3':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '3':
                             type = Fore.RED + Style.BRIGHT + 'STR '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '4':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '4':
                             type = Fore.YELLOW + 'PHY '
-                        card_list.append(type + config.Cards.find(int(card['item_id'
-                                                                      ])).name + ' ' + rarity)
+                        card_list.append(type + game.Cards.get_by_id(int(card['item_id'])).name + ' ' + rarity)
                     for card in card_list:
                         print(card)
                 window.UnHide()
@@ -77,35 +79,35 @@ def summon_command():
                         return 0
                     card_list = []
                     for card in r['gasha_items']:
-                        config.Cards.find_or_fail(int(card['item_id'])).rarity
+                        #game.Cards.get_by_id(int(card['item_id'])).rarity
 
-                        if config.Cards.find(int(card['item_id'])).rarity == 0:
+                        if game.Cards.get_by_id(int(card['item_id'])).rarity == 0:
                             rarity = Fore.RED + Style.BRIGHT + 'N' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 1:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 1:
                             rarity = Fore.RED + Style.BRIGHT + 'R' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 2:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 2:
                             rarity = Fore.RED + Style.BRIGHT + 'SR' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 3:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 3:
                             rarity = Fore.YELLOW + 'SSR' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 4:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 4:
                             rarity = Fore.MAGENTA + Style.BRIGHT + 'UR' + Style.RESET_ALL
-                        elif config.Cards.find(int(card['item_id'])).rarity == 5:
+                        elif game.Cards.get_by_id(int(card['item_id'])).rarity == 5:
                             rarity = Fore.CYAN + 'LR' + Style.RESET_ALL
-                        if str(config.Cards.find(int(card['item_id'])).element)[-1] == '0':
+                        if str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '0':
                             type = Fore.CYAN + Style.BRIGHT + 'AGL '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '1':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '1':
                             type = Fore.GREEN + Style.BRIGHT + 'TEQ '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '2':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '2':
                             type = Fore.MAGENTA + Style.BRIGHT + 'INT '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '3':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '3':
                             type = Fore.RED + Style.BRIGHT + 'STR '
-                        elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '4':
+                        elif str(game.Cards.get_by_id(int(card['item_id'])).element)[-1] == '4':
                             type = Fore.YELLOW + 'PHY '
-                        card_list.append(type + config.Cards.find(int(card['item_id'
-                                                                      ])).name + ' ' + rarity)
+                        card_list.append(type + game.Cards.get_by_id(int(card['item_id'])).name + ' ' + rarity)
                     for card in card_list:
                         print(card)
                 window.UnHide()
                 window.Refresh()
 
-            print('------------------- Stones remaining: ' + get_remaining_stones_command())
+            user = network.get_user()
+            print('------------------- Stones remaining: ' + str(user['user']['stone']))

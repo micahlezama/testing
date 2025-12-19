@@ -1,11 +1,16 @@
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from colorama import Fore, Style
 
-import config
 import network
+from models import game
 
+from config import GameContext
 
-def change_team_command():
+NAME = 'change-team'
+DESCRIPTION = 'Change your deck'
+CONTEXT = [GameContext.GAME]
+
+def run():
     # Needs to have translation properly implemented!
 
     ###Get user deck to change
@@ -21,7 +26,7 @@ def change_team_command():
     card_list = []
     for card in master_cards:
         ###Get card collection object from database
-        db_card = config.Cards.find_or_fail(card['card_id'])
+        db_card = game.Cards.get_by_id(card['card_id'])
         # db_card = config.Cards.where('id','=',card['card_id']).first()
 
         ###Get card rarity
@@ -51,20 +56,15 @@ def change_team_command():
         ###Get card categories list
         categories = []
         # Get category id's given card id
-        card_card_categories = config.CardCardCategories.where(
-            'card_id', '=', db_card.id).get()
+        card_card_categories = game.CardCardCategories.select().where(game.CardCardCategories.card_id == db_card.id)
 
         for category in card_card_categories:
-            categories.append(config.CardCategories.find(category.card_category_id).name)
+            categories.append(game.CardCategories.get_by_id(category.card_category_id).name)
         ###Get card link_skills list
         link_skills = []
-        link_skills.append(config.LinkSkills.find(db_card.link_skill1_id).name)
-        link_skills.append(config.LinkSkills.find(db_card.link_skill2_id).name)
-        link_skills.append(config.LinkSkills.find(db_card.link_skill3_id).name)
-        link_skills.append(config.LinkSkills.find(db_card.link_skill4_id).name)
-        link_skills.append(config.LinkSkills.find(db_card.link_skill5_id).name)
-        link_skills.append(config.LinkSkills.find(db_card.link_skill6_id).name)
-        link_skills.append(config.LinkSkills.find(db_card.link_skill7_id).name)
+        for li in range(1, 8):
+            if eval(f"db_card.link_skill{li}_id"):
+                link_skills.append(game.LinkSkills.get_by_id(eval(f"db_card.link_skill{li}_id")).name)
 
         dict = {
             'ID': db_card.id,
@@ -100,15 +100,15 @@ def change_team_command():
 
     ###Define links to display
     links_master = []
-    for link in config.LinkSkills.all():
+    for link in game.LinkSkills.select():
         links_master.append(link.name)
 
     links_to_display = sorted(links_master)
 
     ###Define categories to display
     categories_master = []
-    for category in config.CardCategories.all():
-        categories_master.append(config.CardCategories.find_or_fail(category.id).name)
+    for category in game.CardCategories.select():
+        categories_master.append(game.CardCategories.get_by_id(category.id).name)
 
     categories_to_display = sorted(categories_master)
 
@@ -169,7 +169,7 @@ def change_team_command():
             char_name, char_id, char_unique_id = chosen_line.split(' | ')
             chosen_cards_ids.append(int(char_id))
             chosen_cards_unique_ids.append(int(char_unique_id))
-            chosen_cards_names.append(config.Cards.find(char_id).name)
+            chosen_cards_names.append(game.Cards.get_by_id(char_id).name)
 
             # Chosen cards to display in lower box
             chosen_cards_to_display.append(chosen_line)
@@ -236,14 +236,14 @@ def change_team_command():
                     char['UniqueID']))
 
         ###Update window elements
-        window.FindElement('CARDS').Update(values=cards_to_display)
-        window.FindElement('CARDS_CHOSEN').Update(values=chosen_cards_to_display)
-        window.FindElement('CATEGORIES').Update(values=categories_to_display)
-        window.FindElement('CATEGORIES_CHOSEN').Update(values=chosen_categories)
-        window.FindElement('LINKS').Update(values=links_to_display)
-        window.FindElement('LINKS_CHOSEN').Update(values=chosen_links)
-        window.FindElement('RARITY').Update(values=rarities_to_display)
-        window.FindElement('RARITY_CHOSEN').Update(values=chosen_rarities)
+        window.find_element('CARDS').Update(values=cards_to_display)
+        window.find_element('CARDS_CHOSEN').Update(values=chosen_cards_to_display)
+        window.find_element('CATEGORIES').Update(values=categories_to_display)
+        window.find_element('CATEGORIES_CHOSEN').Update(values=chosen_categories)
+        window.find_element('LINKS').Update(values=links_to_display)
+        window.find_element('LINKS_CHOSEN').Update(values=chosen_links)
+        window.find_element('RARITY').Update(values=rarities_to_display)
+        window.find_element('RARITY_CHOSEN').Update(values=chosen_rarities)
 
     window.Close()
     ###Send selected team to bandai
