@@ -71,7 +71,6 @@ def __get(endpoint: str, params: Optional[Any] = None):
     url = config.game_env.url + endpoint
     headers = __generate_headers('GET', endpoint)
     res = requests.get(url, headers=headers)
-    __print_response(res)
     return res.json() if res.status_code != 204 else None
 
 
@@ -80,7 +79,7 @@ def __put(endpoint: str, data: Optional[dict[str, Any]] = None):
     url = config.game_env.url + endpoint
     data = __purge_none(data)
     res = requests.put(url, headers=headers, data=json.dumps(data) if data is not None else None)
-    __print_response(res)
+    
     return res.json() if res.status_code != 204 else None
 
 
@@ -89,7 +88,6 @@ def __post(endpoint: str, data: Optional[dict[str, Any]] = None):
     url = config.game_env.url + endpoint
     data = __purge_none(data)
     res = requests.post(url, headers=headers, data=json.dumps(data) if data is not None else None)
-    __print_response(res)
     return res.json() if res.status_code != 204 else None
 
 
