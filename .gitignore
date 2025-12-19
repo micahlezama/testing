@@ -1,5 +1,7 @@
 *.pyc
 __pycache__
+python/
+dokbot/
 src/__pycache__
 src/classes/__pycache__
 src/commands/__pycache__
