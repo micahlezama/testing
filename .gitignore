@@ -8,7 +8,6 @@ src/commands/__pycache__
 src/models/__pycache__
 src/services/__pycache__
 *.db
-*.bat
 saves/
 data/
 config.json
