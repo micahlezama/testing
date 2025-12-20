@@ -5,12 +5,11 @@ REQS_PATH="requirements.txt"
 # Check if Python 3.9 is already installed 
 if command -v python &> /dev/null && python --version | cut -d '.' -f 1,2 | grep -q "Python 3.9"; then
     PYTHON_EXE="python"
-    echo "Using system Python"
 else
     if [[ "$OSTYPE" == "linux-gnu" ]]; then
-        echo "Installing Python..."
+        echo "Installing python..."
         if ! sudo apt-get install -y python3.9.13; then
-            echo "Failed to install Python"
+            echo "Failed to install python"
             read -p "Press [Enter] to exit..."
             exit 1
         fi
@@ -23,22 +22,23 @@ else
         if [[ -f "$PKG_PATH" ]]; then
             echo "Python is already downloaded!"
         else
-            echo "Downloading Python..."
+            echo "Downloading python..."
             if ! curl -L "$PYTHON_URL" -o "$PKG_PATH"; then
-                echo "Failed to download Python."
+                echo "Failed to download python"
                 read -p "Press [Enter] to exit..."
                 exit 1
             fi
-            echo "Download completed successfully."
+            echo "Download complete"
 
-            echo "Installing Python..."
+            echo "Installing python..."
 
             sudo installer -pkg "$PKG_PATH" -target /
 
             if [ $? -eq 0 ]; then
-                echo "Installation completed successfully."
+                echo "Installation complete"
+                PYTHON_EXE="python"
             else
-                echo "Installation failed."
+                echo "Installation failed"
                 read -p "Press [Enter] to exit..."
                 exit 1
             fi
@@ -65,37 +65,26 @@ fi
 
 # Create virtual environment if it doesn't exist
 if [[ ! -d "dokbot" ]]; then
-    echo "Creating virtual environment 'dokbot'..."
+    echo "Creating virtual environment..."
     "$PYTHON_EXE" -m venv dokbot
     if [ $? -ne 0 ]; then
-        echo "Failed to create virtual environment."
+        echo "Failed to create virtual environment"
         read -p "Press [Enter] to exit..."
         exit 1
     fi
 fi
 
 # Set Python executable to the virtual environment
-echo "Activating virtual environment"
+echo "Activating virtual environment..."
 command "$PWD/dokbot/scripts/activate"
 
-# Install dependencies
 echo "Installing dependencies..."
-
-echo "Upgrading pip..."
-if ! "$PYTHON_EXE" -m pip install --upgrade pip; then
-    echo "Failed to upgrade pip."
-    read -p "Press [Enter] to exit..."
-    exit 1
-fi
-echo "Pip upgrade completed successfully."
-
-echo "Installing packages from requirements.txt..."
 if ! "$PYTHON_EXE" -m pip install -r "$REQS_PATH"; then
     echo "Failed to install dependencies."
     read -p "Press [Enter] to exit..."
     exit 1
 fi
-echo "Package installation completed successfully."
+echo "Package installation complete"
 
 echo "Initialization complete! Starting the bot..."
 
