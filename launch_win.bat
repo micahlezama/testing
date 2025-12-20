@@ -1,3 +1,3 @@
-powershell.exe %cd%\wps.ps1
+powershell.exe -executionpolicy bypass -file %cd%\wps.ps1
 
 pause
