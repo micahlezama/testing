@@ -2,14 +2,14 @@
 # Shell script to download Python (Linux/macOS), extract, install dependencies, and run the bot
 REQS_PATH="requirements.txt"
 
-# Check if Python 3.9 is already available
-if command -v python &> /dev/null && python --version | grep -q "Python 3.9.13"; then
+# Check if Python 3.9 is already installed 
+if command -v python &> /dev/null && python --version | cut -d '.' -f 1,2 | grep -q "Python 3.9"; then
     PYTHON_EXE="python"
     echo "Using system Python"
 else
     if [[ "$OSTYPE" == "linux-gnu" ]]; then
         echo "Installing Python..."
-        if ! sudo apt-get update && sudo apt-get install -y python3.9.13; then
+        if ! sudo apt-get install -y python3.9.13; then
             echo "Failed to install Python"
             read -p "Press [Enter] to exit..."
             exit 1
@@ -76,7 +76,7 @@ fi
 
 # Set Python executable to the virtual environment
 echo "Activating virtual environment"
-command "$PWD/dokbot/lib/activate"
+command "$PWD/dokbot/scripts/activate"
 
 # Install dependencies
 echo "Installing dependencies..."
