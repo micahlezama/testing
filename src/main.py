@@ -33,9 +33,10 @@ def check_servers(env: GameEnvironment):
     return True
 
 
-if check_servers(config.game_env):
-    cli.run()
-else:
-    print(Fore.RED + 'press ENTER to close...')
-    input()
-    exit()
+def main():
+    if check_servers(config.game_env):
+        cli.run()
+    else:
+        print(Fore.RED + 'press ENTER to close...')
+        input()
+        exit()
