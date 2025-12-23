@@ -3,12 +3,10 @@ import time
 from random import randint
 
 from colorama import Fore, Style
-from commands.game.refresh_client import refresh_client_command
 
 import config
 import crypto
 import network
-from commands.act import refill_stamina_command
 
 
 def complete_unfinished_zbattles_command(kagi=False):
@@ -73,7 +71,7 @@ def complete_unfinished_zbattles_command(kagi=False):
                     if r['error']['code'] == 'act_is_not_enough':
                         # Check if allowed to refill stamina
                         if config.allow_stamina_refill == True:
-                            refill_stamina_command()
+                            # TODO: REFILL STAMINA USED TO BE HERE
                             network.post_zbattles_start(str(event['id']), enc_sign)
                     else:
                         print(r)
@@ -230,7 +228,6 @@ def complete_unfinished_zbattles_command(kagi=False):
                 print('--------------------------')
                 print('##############################################')
                 level += 1
-            refresh_client_command()
 
     except Exception as e:
         print(Fore.RED + Style.BRIGHT + str(e))

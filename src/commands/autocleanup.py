@@ -2,7 +2,13 @@ import network
 import models.game
 import time
 
-def auto_sell_junk():
+from config import GameContext
+
+NAME = 'auto-sell'
+DESCRIPTION = 'Auto-sell junk'
+CONTEXT = [GameContext.GAME]
+
+def run():
     """Automatically sells low-rarity cards (N and R)."""
     print("[AutoCleanup] Starting automatic card cleanup...")
 

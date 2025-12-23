@@ -1,7 +1,5 @@
-from commands.game.refresh_client import refresh_client_command
-
 import network
-from commands.stage import complete_stage_command
+from commands.stage import run as run_stage 
 
 
 # noinspection SyntaxError
@@ -24,7 +22,8 @@ def complete_unfinished_events_command():
         if area['area_id'] in event_ids:
             for stage in area['user_sugoroku_maps']:
                 if stage['cleared_count'] == 0:
-                    complete_stage_command(str(stage['sugoroku_map_id'])[:-1], str(stage['sugoroku_map_id'])[-1])
+                    run_stage(str(stage['sugoroku_map_id'])[:-1], str(stage['sugoroku_map_id'])[-1])
                     i += 1
         if i % 30 == 0:
-            refresh_client_command()
+            pass
+            #refresh_client_command()

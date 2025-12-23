@@ -1707,7 +1707,6 @@ class Quests(BaseModel):
     area_id = IntegerField(index=True)
     boostable = IntegerField(constraints=[SQL("DEFAULT 0")])
     can_ignore_difficulty_order = IntegerField(constraints=[SQL("DEFAULT 0")])
-    created_at = DateTimeField()
     enable_battle_auto = IntegerField(constraints=[SQL("DEFAULT 1")])
     enable_sugoroku_auto = IntegerField(constraints=[SQL("DEFAULT 1")])
     interval_reset_visited_days = IntegerField(null=True)
