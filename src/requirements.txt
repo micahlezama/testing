@@ -1,0 +1,10 @@
+pyinstaller
+colorama
+pyCryptodome
+FreeSimpleGUI
+requests
+peewee
+selenium
+selenium-wire
+blinker==1.7.0
+tkinter-embed

@@ -1,6 +1,0 @@
-pyinstaller
-colorama
-pyCryptodome
-FreeSimpleGUI
-requests
-peewee

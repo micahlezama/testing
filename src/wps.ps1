@@ -10,28 +10,34 @@ $requirementsPath = Join-Path $PSScriptRoot "requirements.txt"
 # Find the Python executable
 $pythonExe = Join-Path $extractPath "python\python.exe"
 
-# Check if Python is already downloaded and extracted
-if (Test-Path $pythonExe) {
-    Write-Host "Python is already downloaded!"
-} else {
-    try {
-        # Download the Python zip file
-        Write-Host "Downloading Python..."
-        Invoke-WebRequest -Uri $pythonUrl -OutFile $zipPath -ErrorAction Stop
-        Write-Host "Download completed successfully."
-    } catch {
-        Write-Error "Failed to download Python zip file: $_"
-        exit 1
-    }
+# Check if global python version is 3.9
+if (python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" | Select-String -Pattern '3.9' -Quiet) {
+    $pythonExe = 'python'
+}
+else {
+    # Check if Python is already downloaded and extracted
+    if (Test-Path $pythonExe) {
+        Write-Host "Python is already downloaded!"
+    } else {
+        try {
+            # Download the Python zip file
+            Write-Host "Downloading Python..."
+            Invoke-WebRequest -Uri $pythonUrl -OutFile $zipPath -ErrorAction Stop
+            Write-Host "Download completed successfully."
+        } catch {
+            Write-Error "Failed to download Python zip file: $_"
+            exit 1
+        }
 
-    try {
-        # Extract the zip file
-        Write-Host "Extracting Python..."
-        Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force -ErrorAction Stop
-        Write-Host "Extraction completed successfully."
-    } catch {
-        Write-Error "Failed to extract Python zip file"
-        exit 1
+        try {
+            # Extract the zip file
+            Write-Host "Extracting Python..."
+            Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force -ErrorAction Stop
+            Write-Host "Extraction completed successfully."
+        } catch {
+            Write-Error "Failed to extract Python zip file"
+            exit 1
+        }
     }
 }
 
@@ -43,6 +49,7 @@ if (-Not (Test-Path $pythonExe)) {
 
 # Install dependencies using the downloaded Python's pip
 Write-Host "Installing dependencies..."
+
 
 try {
     Write-Host "Upgrading pip..."
@@ -74,4 +81,5 @@ Remove-Item $zipPath -ErrorAction SilentlyContinue
 
 Write-Host "Initialization complete! Starting the bot..."
 
-& $pythonExe launch_bot.py
+
+& $pythonExe main.py

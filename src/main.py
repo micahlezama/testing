@@ -1,9 +1,12 @@
+import sys, os
+sys.path.append(os.getcwd())
 import requests
 from colorama import Fore, init
 
 import cli
 import config
 from classes.Game import GameEnvironment
+
 
 init(autoreset=True)
 
@@ -40,3 +43,6 @@ def main():
         print(Fore.RED + 'press ENTER to close...')
         input()
         exit()
+
+if __name__ == "__main__":
+    main()
