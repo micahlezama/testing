@@ -1,5 +1,3 @@
-import sys, os
-sys.path.append(os.getcwd())
 import requests
 from colorama import Fore, init
 

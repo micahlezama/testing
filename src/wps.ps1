@@ -82,4 +82,4 @@ Remove-Item $zipPath -ErrorAction SilentlyContinue
 Write-Host "Initialization complete! Starting the bot..."
 
 
-& $pythonExe main.py
+& $pythonExe launch_bot.py

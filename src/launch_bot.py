@@ -1,15 +1,19 @@
 # ============================
 # Imports (EXPLICIT)
 # ============================
+import sys, os
+sys.path.append(os.getcwd())
 import os
 import json
 import requests
 import webbrowser
+import main
 from datetime import datetime, timedelta
 from flask import Flask, redirect, request, jsonify
 from dotenv import load_dotenv
 from pathlib import Path
-from threading import Timer
+from multiprocessing import Process, Value
+from time import sleep
 
 # ============================
 # Environment loading
@@ -29,10 +33,10 @@ app = Flask(__name__)
 # Discord App Info
 # ============================
 CLIENT_ID = "1431320716740919296"
-CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+CLIENT_SECRET = "QppclEui2K3Bq3Rs9FfmmXl1oEOEuaWP"
 
 REDIRECT_URI = "http://localhost:5000/callback"
-LOCAL_CLIENT_REDIRECT = "http://127.0.0.1:6969/auth_success"
+LOCAL_CLIENT_REDIRECT = "http://localhost:5000/auth_success"
 
 DISCORD_API = "https://discord.com/api"
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -121,9 +125,19 @@ def callback():
         "verified_role": verified,
         "expires": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
     }
+
     save_subs(subs)
 
     return redirect(f"{LOCAL_CLIENT_REDIRECT}?id={discord_id}&user={username}")
+
+@app.route("/auth_success")
+def success():
+    global auth_done 
+    did = request.args.get("discord_id")
+    # --- CODE TO VERIFY ACCESS HERE ---
+    # ----------------------------------
+    auth_done.value = True
+    return "<p>Authentication successful!, you can close this window</p>"
 
 # ============================
 # API Routes
@@ -151,18 +165,34 @@ def open_browser():
     except Exception as e:
         print(f"❌ Failed to open browser: {e}")
 
+def run_server(done, **kwargs):
+    global auth_done
+    auth_done = done
+    app.run(**kwargs)
+
 # ============================
 # Entry Point
 # ============================
 if __name__ == "__main__":
     print("🚀 Starting Flask verification server...")
+    done = Value('b', False)
+    fapp = Process(target=run_server, args=(done,), kwargs={
+                    'host':"127.0.0.1",
+                    'port':5000,
+                    'debug':False,        # MUST be False
+                    'use_reloader':False  # MUST be False
+                    }, daemon=True)
+    fapp.start()
 
-    # Open browser AFTER server starts
-    Timer(1, open_browser).start()
+    sleep(5)
+    open_browser()
 
-    app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=False,        # MUST be False
-        use_reloader=False # MUST be False
-    )
+    while fapp.is_alive() and not done.value:
+        print('Waiting for user authentication...')
+        sleep(1)
+    
+    if fapp.is_alive():
+        fapp.kill()
+
+    print('Starting bot...')
+    main.main()
