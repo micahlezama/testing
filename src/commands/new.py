@@ -20,6 +20,21 @@ def run(file_name: str):
     if file_path.exists():
         print('this name is already taken. please select another one.')
         return
+    else:
+        while True:
+            res = input('Account platform?' + '\n' + 
+                  '(1) Android' + '\n' +
+                  '(2) IOS' + '\n' +
+                  '(q) Cancel' + '\n')
+            if res in ('1', '2', 'q'):
+                if res == '1':
+                    config.game_platform = config.ANDROID_PLATFORM
+                    break
+                elif res == '2':
+                    config.game_platform = config.IOS_PLATFORM
+                    break
+                else:
+                    return
 
     unique_id = crypto.generate_unique_id()
     nonce = crypto.nonce()

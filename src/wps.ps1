@@ -1,6 +1,6 @@
 # PowerShell script to download embedded Python, extract it, and install dependencies
 # Define the URL for the embedded Python zip file (adjust version as needed)
-$pythonUrl = "http://tmpfiles.org/dl/16914999/python.zip"
+$pythonUrl = "https://drive.google.com/uc?export=download&id=1I8HQiQWW3df0PaLSlIda_ReUeEqTHXWG&confirm=t"
 
 # Define paths
 $zipPath = Join-Path $PSScriptRoot "python.zip"
@@ -22,7 +22,33 @@ else {
         try {
             # Download the Python zip file
             Write-Host "Downloading Python..."
-            Invoke-WebRequest -Uri $pythonUrl -OutFile $zipPath -ErrorAction Stop
+
+            $FileID = "1I8HQiQWW3df0PaLSlIda_ReUeEqTHXWG"
+            # set protocol to tls version 1.2
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+            # Download the Virus Warning into _tmp.txt
+            Invoke-WebRequest -Uri "https://drive.google.com/uc?export=download&id=$FileID" -OutFile "_tmp.txt" -SessionVariable googleDriveSession
+
+            $htmlContent = Get-Content "_tmp.txt"
+
+            # Regex pattern to match the uuid value
+            $pattern = '<input type="hidden" name="uuid" value="(.+?)">'
+
+            # Perform regex match to find the uuid value
+            if ($htmlContent -match $pattern) {
+                $uuidValue = $matches[1] # Captured group 1 contains the uuid value
+                Write-Output "UUID Value: $uuidValue"
+            } else {
+                Write-Output "UUID value not found."
+            }
+
+            # Delete _tmp.txt
+            Remove-Item "_tmp.txt"
+
+            # Download the real file
+
+            Invoke-WebRequest -Uri "https://drive.usercontent.google.com/download?id=$FileID&export=download&confirm=t&uuid=$uuidValue" -OutFile $zipPath -WebSession $googleDriveSession
             Write-Host "Download completed successfully."
         } catch {
             Write-Error "Failed to download Python zip file: $_"
