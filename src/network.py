@@ -27,7 +27,7 @@ def __generate_headers(
     return {
         'User-Agent': platform.user_agent,
         'Accept': '*/*',
-        'Authorization': crypto.mac(method, endpoint),
+        'Authorization': 'Bearer ' + config.game_account.access_token,
         'Content-type': 'application/json',
         'X-Platform': platform.name,
         'X-AssetVersion': asset_version,
@@ -71,6 +71,7 @@ def __get(endpoint: str, params: Optional[Any] = None):
     url = config.game_env.url + endpoint
     headers = __generate_headers('GET', endpoint)
     res = requests.get(url, headers=headers)
+    print(res.json())
     return res.json() if res.status_code != 204 else None
 
 
