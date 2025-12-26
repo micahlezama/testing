@@ -8,7 +8,7 @@ import os
 
 
 os.makedirs('dist', exist_ok=True)
-FTA = ['setup.py', '__init__.py']
+FTA = ['setup.py', 'auxil.py', '__init__.py']
 
 def file_code(fldr, fn):
     fldr = os.path.join('dist', fldr)

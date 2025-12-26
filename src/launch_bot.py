@@ -1,198 +1,205 @@
 # ============================
 # Imports (EXPLICIT)
 # ============================
-import sys, os
-sys.path.append(os.getcwd())
 import os
 import json
+import signal
 import requests
 import webbrowser
 import main
 from datetime import datetime, timedelta
 from flask import Flask, redirect, request, jsonify
+from werkzeug.wrappers import Request, Response        
+from werkzeug.serving import make_server 
 from dotenv import load_dotenv
 from pathlib import Path
-from multiprocessing import Process, Value
+from threading import Thread
 from time import sleep
 
-# ============================
-# Environment loading
-# ============================
-BASE_DIR = Path(__file__).resolve().parent
-ENV_PATH = BASE_DIR / "discord.env"
+def launch():
+    # ============================
+    # Environment loading
+    # ============================
+    BASE_DIR = Path(__file__).resolve().parent
+    ENV_PATH = BASE_DIR / "discord.env"
 
-load_dotenv(ENV_PATH)
-print(f"🔧 Loading environment from: {ENV_PATH}")
+    load_dotenv(ENV_PATH)
+    print(f"🔧 Loading environment from: {ENV_PATH}")
 
-# ============================
-# Flask app
-# ============================
-app = Flask(__name__)
+    # ============================
+    # Flask app
+    # ============================
+    app = Flask(__name__)
 
-# ============================
-# Discord App Info
-# ============================
-CLIENT_ID = "1431320716740919296"
-CLIENT_SECRET = "QppclEui2K3Bq3Rs9FfmmXl1oEOEuaWP"
+    # ============================
+    # Discord App Info
+    # ============================
+    CLIENT_ID = "1431320716740919296"
+    CLIENT_SECRET = "QppclEui2K3Bq3Rs9FfmmXl1oEOEuaWP"
 
-REDIRECT_URI = "http://localhost:5000/callback"
-LOCAL_CLIENT_REDIRECT = "http://localhost:5000/auth_success"
+    REDIRECT_URI = "http://localhost:5000/callback"
+    LOCAL_CLIENT_REDIRECT = "http://localhost:5000/auth_success"
 
-DISCORD_API = "https://discord.com/api"
-DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-VERIFIED_ROLE_ID = os.getenv("VERIFIED_ROLE_ID")
-GUILD_ID = os.getenv("DISCORD_GUILD_ID")
+    DISCORD_API = "https://discord.com/api"
+    DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+    VERIFIED_ROLE_ID = os.getenv("VERIFIED_ROLE_ID")
+    GUILD_ID = os.getenv("DISCORD_GUILD_ID")
 
-SUB_DB = BASE_DIR / "subscriptions.json"
+    SUB_DB = BASE_DIR / "subscriptions.json"
 
-print("🔧 Loaded Discord Client Info:")
-print(f"CLIENT_ID: {CLIENT_ID}")
-print(f"CLIENT_SECRET present: {bool(CLIENT_SECRET)}")
-print(f"Guild ID: {GUILD_ID} | Verified Role ID: {VERIFIED_ROLE_ID}")
+    print("🔧 Loaded Discord Client Info:")
+    print(f"CLIENT_ID: {CLIENT_ID}")
+    print(f"CLIENT_SECRET present: {bool(CLIENT_SECRET)}")
+    print(f"Guild ID: {GUILD_ID} | Verified Role ID: {VERIFIED_ROLE_ID}")
 
-# ============================
-# Helpers
-# ============================
-def load_subs():
-    if not SUB_DB.exists():
-        return {}
-    with open(SUB_DB, "r") as f:
-        return json.load(f)
+    # ============================
+    # Helpers
+    # ============================
+    def load_subs():
+        if not SUB_DB.exists():
+            return {}
+        with open(SUB_DB, "r") as f:
+            return json.load(f)
 
-def save_subs(subs):
-    with open(SUB_DB, "w") as f:
-        json.dump(subs, f, indent=2)
+    def save_subs(subs):
+        with open(SUB_DB, "w") as f:
+            json.dump(subs, f, indent=2)
 
-def has_verified_role(discord_id: str) -> bool:
-    url = f"{DISCORD_API}/guilds/{GUILD_ID}/members/{discord_id}"
-    headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
-    resp = requests.get(url, headers=headers)
+    def has_verified_role(discord_id: str) -> bool:
+        url = f"{DISCORD_API}/guilds/{GUILD_ID}/members/{discord_id}"
+        headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
+        resp = requests.get(url, headers=headers)
 
-    if resp.status_code != 200:
-        print(f"❌ Failed to fetch roles for {discord_id}: {resp.status_code}")
-        return False
+        if resp.status_code != 200:
+            print(f"❌ Failed to fetch roles for {discord_id}: {resp.status_code}")
+            return False
 
-    return VERIFIED_ROLE_ID in resp.json().get("roles", [])
+        return VERIFIED_ROLE_ID in resp.json().get("roles", [])
 
-# ============================
-# OAuth Routes
-# ============================
-@app.route("/login")
-def login():
-    auth_url = (
-        f"{DISCORD_API}/oauth2/authorize"
-        f"?client_id={CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URI}"
-        f"&response_type=code"
-        f"&scope=identify"
-    )
-    return redirect(auth_url)
+    # ============================
+    # OAuth Routes
+    # ============================
+    @app.route("/login")
+    def login():
+        auth_url = (
+            f"{DISCORD_API}/oauth2/authorize"
+            f"?client_id={CLIENT_ID}"
+            f"&redirect_uri={REDIRECT_URI}"
+            f"&response_type=code"
+            f"&scope=identify"
+        )
+        return redirect(auth_url)
 
-@app.route("/callback")
-def callback():
-    code = request.args.get("code")
+    @app.route("/callback")
+    def callback():
+        code = request.args.get("code")
 
-    token_resp = requests.post(
-        f"{DISCORD_API}/oauth2/token",
-        data={
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": REDIRECT_URI,
-            "scope": "identify",
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    ).json()
+        token_resp = requests.post(
+            f"{DISCORD_API}/oauth2/token",
+            data={
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": REDIRECT_URI,
+                "scope": "identify",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        ).json()
 
-    if "access_token" not in token_resp:
-        return jsonify(token_resp), 400
+        if "access_token" not in token_resp:
+            return jsonify(token_resp), 400
 
-    user = requests.get(
-        f"{DISCORD_API}/users/@me",
-        headers={"Authorization": f"Bearer {token_resp['access_token']}"},
-    ).json()
+        user = requests.get(
+            f"{DISCORD_API}/users/@me",
+            headers={"Authorization": f"Bearer {token_resp['access_token']}"},
+        ).json()
 
-    discord_id = str(user["id"])
-    username = user["username"]
+        discord_id = str(user["id"])
+        username = user["username"]
 
-    verified = has_verified_role(discord_id)
+        verified = has_verified_role(discord_id)
 
-    subs = load_subs()
-    subs[discord_id] = {
-        "username": username,
-        "active": verified,
-        "verified_role": verified,
-        "expires": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
-    }
+        subs = load_subs()
+        subs[discord_id] = {
+            "username": username,
+            "active": verified,
+            "verified_role": verified,
+            "expires": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        }
 
-    save_subs(subs)
+        save_subs(subs)
 
-    return redirect(f"{LOCAL_CLIENT_REDIRECT}?id={discord_id}&user={username}")
+        return redirect(f"{LOCAL_CLIENT_REDIRECT}?id={discord_id}&user={username}")
 
-@app.route("/auth_success")
-def success():
-    global auth_done 
-    did = request.args.get("discord_id")
-    # --- CODE TO VERIFY ACCESS HERE ---
-    # ----------------------------------
-    auth_done.value = True
-    return "<p>Authentication successful!, you can close this window</p>"
+    @app.route("/auth_success")
+    def success():
+        global stated 
+        did = request.args.get("discord_id")
+        # --- CODE TO VERIFY ACCESS HERE ---
+        # ----------------------------------
+        stated['on'] = True 
+        return "<p>Authentication successful!, you can close this window</p>"
 
-# ============================
-# API Routes
-# ============================
-@app.route("/api/check-access")
-def check_access():
-    did = request.args.get("discord_id")
-    subs = load_subs()
-    user = subs.get(did)
+    def shutdown_server():
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+        
+    @app.get('/shutdown')
+    def shutdown():
+        shutdown_server()
+        return 'Server shutting down...'
 
-    if not user or not user.get("active"):
-        return jsonify({"status": "expired"}), 403
+    # ============================
+    # API Routes
+    # ============================
+    @app.route("/api/check-access")
+    def check_access():
+        did = request.args.get("discord_id")
+        subs = load_subs()
+        user = subs.get(did)
 
-    if datetime.strptime(user["expires"], "%Y-%m-%d") < datetime.now():
-        return jsonify({"status": "expired"}), 403
+        if not user or not user.get("active"):
+            return jsonify({"status": "expired"}), 403
 
-    return jsonify({"status": "active"})
+        if datetime.strptime(user["expires"], "%Y-%m-%d") < datetime.now():
+            return jsonify({"status": "expired"}), 403
 
-# ============================
-# Browser Open (WINDOWS SAFE)
-# ============================
-def open_browser():
-    try:
-        os.startfile("http://localhost:5000/login")
-    except Exception as e:
-        print(f"❌ Failed to open browser: {e}")
+        return jsonify({"status": "active"})
 
-def run_server(done, **kwargs):
-    global auth_done
-    auth_done = done
-    app.run(**kwargs)
+    # ============================
+    # Browser Open (WINDOWS SAFE)
+    # ============================
+    def open_browser():
+        try:
+            os.startfile("http://localhost:5000/login")
+        except Exception as e:
+            print(f"❌ Failed to open browser: {e}")
 
-# ============================
-# Entry Point
-# ============================
-if __name__ == "__main__":
+    def run_server(sd):
+        global stated
+        stated = sd
+        stated['server'] = make_server("127.0.0.1", 5000, app)
+        stated['server'].serve_forever()
+
+    # ============================
+    # Entry Point
+    # ============================
     print("🚀 Starting Flask verification server...")
-    done = Value('b', False)
-    fapp = Process(target=run_server, args=(done,), kwargs={
-                    'host':"127.0.0.1",
-                    'port':5000,
-                    'debug':False,        # MUST be False
-                    'use_reloader':False  # MUST be False
-                    }, daemon=True)
+    state = {'on':False}
+    fapp = Thread(target=run_server, args=(state,), daemon=True)
     fapp.start()
 
     sleep(5)
     open_browser()
 
-    while fapp.is_alive() and not done.value:
+    while fapp.is_alive() and not state['on']:
         print('Waiting for user authentication...')
         sleep(1)
     
-    if fapp.is_alive():
-        fapp.kill()
+    Thread(target=state['server'].shutdown, daemon=True).start()
 
     print('Starting bot...')
     main.main()
