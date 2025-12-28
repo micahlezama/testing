@@ -51,58 +51,34 @@ def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
     )
 
     enc_sign = crypto.encrypt_sign(json.dumps(sign))
-    r = network.post_quests_sugoroku_start(stage_id, enc_sign)
+    r = StageService.start_stage(stage_id, enc_sign)
 
     # --- Handle possible API responses ---
     if not isinstance(r, dict):
         print(Fore.RED + f"[Stage] Unexpected response type: {type(r)}" + Style.RESET_ALL)
         return 0
 
-    if "sign" in r:
+    if r['result'] == 'success':
         dec_sign = crypto.decrypt_sign(r["sign"])
-    elif "error" in r:
-        err = r["error"]
-        err_code = err.get("code", "unknown_error") if isinstance(err, dict) else str(err)
-        print(Fore.RED + f"[Stage] Error: {err}" + Style.RESET_ALL)
-        print(Fore.RED + f"[Stage] Error code: {err_code}" + Style.RESET_ALL)
-
-        # --- Handle specific known errors ---
-        if err_code == "act_is_not_enough":
-            if config.allow_stamina_refill:
-                act.run()
-                print("[Stage] Retrying after stamina refill...")
-                return run(stage_id, difficulty, kagi)
-            else:
-                print(Fore.RED + "[Stage] Stamina refill not allowed." + Style.RESET_ALL)
-                return 0
-
-        elif err_code == "the_number_of_cards_must_be_less_than_or_equal_to_the_capacity":
-            # Trigger auto cleanup hook if available
-            try:
-                from commands.autocleanup import auto_sell_junk
-                print("[Stage] ⚠️ Card box full — running cleanup.")
-                auto_sell_junk()
-            except Exception as cleanup_error:
-                print(Fore.RED + f"[Stage] Auto-cleanup failed: {cleanup_error}" + Style.RESET_ALL)
-            return 0
-
-        elif err_code == "invalid_token":
-            print(Fore.YELLOW + "[Stage] Token invalid — please re-login." + Style.RESET_ALL)
-            return 0
-
-        elif err_code == "active_record/record_not_found":
-            print(Fore.RED + "[Stage] Quest not found." + Style.RESET_ALL)
-            return 0
-
-        elif err_code == "invalid_area_conditions_potential_releasable":
-            print(Fore.RED + "[Stage] You do not meet the conditions for this event." + Style.RESET_ALL)
-            return 0
-
+    elif r['result'] == 'low_stamina':
+        if config.allow_stamina_refill:
+            act.run()
+            print("[Stage] Retrying after stamina refill...")
+            return run(stage_id, difficulty, kagi)
         else:
-            print(Fore.RED + f"[Stage] Unhandled error: {err_code}" + Style.RESET_ALL)
+            print(Fore.RED + "[Stage] Stamina refill not allowed." + Style.RESET_ALL)
             return 0
+    elif r['result'] == 'full_box':
+        # Trigger auto cleanup hook if available
+        try:
+            from commands.autocleanup import auto_sell_junk
+            print("[Stage] ⚠️ Card box full — running cleanup.")
+            auto_sell_junk()
+            return run(stage_id, difficulty, kagi)
+        except Exception as cleanup_error:
+            print(Fore.RED + f"[Stage] Auto-cleanup failed: {cleanup_error}" + Style.RESET_ALL)
+        return 0
     else:
-        print(Fore.RED + f"[Stage] Invalid response: {r}" + Style.RESET_ALL)
         return 0
 
     # --- Normal stage completion flow ---

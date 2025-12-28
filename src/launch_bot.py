@@ -6,7 +6,6 @@ import json
 import signal
 import requests
 import webbrowser
-import main
 from datetime import datetime, timedelta
 from flask import Flask, redirect, request, jsonify
 from werkzeug.wrappers import Request, Response        
@@ -86,7 +85,7 @@ def launch():
             f"?client_id={CLIENT_ID}"
             f"&redirect_uri={REDIRECT_URI}"
             f"&response_type=code"
-            f"&scope=identify"
+            f"&scope=guilds.members.read"
         )
         return redirect(auth_url)
 
@@ -127,6 +126,7 @@ def launch():
             "verified_role": verified,
             "expires": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
         }
+        subs["token"] = token_resp['access_token']
 
         save_subs(subs)
 
@@ -202,4 +202,5 @@ def launch():
     Thread(target=state['server'].shutdown, daemon=True).start()
 
     print('Starting bot...')
+    import main
     main.main()

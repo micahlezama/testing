@@ -1,3 +1,12 @@
+import auth
+try:
+    if not auth.zn():
+        import sys
+        sys.exit(0)
+except Exception as e:
+    import sys
+    sys.exit(0)
+
 import importlib
 import pkgutil
 from inspect import getmembers
@@ -13,6 +22,8 @@ class CommandService:
 
     @staticmethod
     def load():
+        prem_cmds = ('eza farm',)
+        prem = auth.zn() == 2
         modules = pkgutil.iter_modules(commands.__path__, commands.__name__ + '.')
         loaded_modules = {
             CommandService.__commands[command_name].__name__: command_name
@@ -29,6 +40,7 @@ class CommandService:
                 command = importlib.import_module(module.name)
                 is_valid = CommandService.is_valid(command)
                 if not is_valid: continue
+                if command.NAME in prem_cmds and not prem: continue
                 CommandService.__commands[command.NAME] = command
             except ImportError as e:
                 print(f'[{Fore.RED}ImportError{Fore.RESET}] {e}')

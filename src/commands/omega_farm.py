@@ -72,47 +72,8 @@ def run():
                 + Style.RESET_ALL
             )
 
-            res = stage.run(quest_id, difficulty)
-
-            # --- Handle unavailable quest ---
-            if isinstance(res, dict) and res.get("skip") == "unavailable_quest":
-                skipped_unavailable += 1
-                print(
-                    Fore.YELLOW
-                    + f"[Omega] ⚠️ Quest {quest_id} unavailable — skipping."
-                    + Style.RESET_ALL
-                )
-                break  # stop trying other difficulties
-
-            # --- Handle card box full ---
-            if isinstance(res, dict) and "error" in res:
-                err_code = res["error"].get("code", "")
-                if err_code == "the_number_of_cards_must_be_less_than_or_equal_to_the_capacity":
-                    print(
-                        Fore.RED
-                        + "[Omega] ⚠️ Card box full — running auto cleanup."
-                        + Fore.RESET
-                    )
-
-                    auto_sell_junk()
-
-                    print("[Omega] Retrying quest...")
-                    retry = stage.run(quest_id, difficulty)
-
-                    if (
-                        isinstance(retry, dict)
-                        and "error" in retry
-                        and retry["error"].get("code")
-                        == "the_number_of_cards_must_be_less_than_or_equal_to_the_capacity"
-                    ):
-                        print(
-                            Fore.RED
-                            + "[Omega] ❌ Cleanup failed — stopping run."
-                            + Style.RESET_ALL
-                        )
-                        return
-
-            completed += 1
+            if stage.run(sugoroku.quest_id, difficulty):
+                completed += 1
 
         # --- Progress ---
         print(

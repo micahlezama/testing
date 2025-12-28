@@ -85,3 +85,5 @@ def run():
         print(f"📦 New total Zeni: {latest_balance:,}")
     print("=========================")
     print("✅ All junk cards sold successfully!\n")
+
+sell_cards_command = run

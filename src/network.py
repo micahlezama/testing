@@ -71,7 +71,7 @@ def __get(endpoint: str, params: Optional[Any] = None):
     url = config.game_env.url + endpoint
     headers = __generate_headers('GET', endpoint)
     res = requests.get(url, headers=headers)
-    print(res.json())
+    #print(res.json())
     return res.json() if res.status_code != 204 else None
 
 
@@ -392,7 +392,7 @@ def post_auth_signup(
 
     url = config.game_env.url + '/auth/sign_up'
     res = requests.post(url, headers=headers, data=json.dumps(data))
-    __print_response(res)
+    #__print_response(res)
     return res.json()
 
 
@@ -436,7 +436,7 @@ def post_auth_signin(
 
     url = config.game_env.url + '/auth/sign_in'
     res = requests.post(url, headers=headers, data=data)
-    __print_response(res)
+    #__print_response(res)
     return res.json()
 
 def request_token(code: str):
@@ -744,11 +744,11 @@ def post_cards_sell(card_ids: list):
     headers = __generate_headers('POST', endpoint)
     payload = {'card_ids': card_ids}
     url = config.game_env.url + endpoint
-    print("[DEBUG] URL:", url)
-    print("[DEBUG] Headers:", headers)
-    print("[DEBUG] Payload:", payload)
+    #print("[DEBUG] URL:", url)
+    #print("[DEBUG] Headers:", headers)
+    #print("[DEBUG] Payload:", payload)
     res = requests.post(url, headers=headers, data=json.dumps(payload))
-    print("[DEBUG] Response text:", res.text)
+    #print("[DEBUG] Response text:", res.text)
     __print_response(res)
     return res.json() if res.status_code != 204 else None
 

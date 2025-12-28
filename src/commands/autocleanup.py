@@ -74,3 +74,5 @@ def run():
         time.sleep(1)
 
     print("[AutoCleanup] ✅ Cleanup complete.")
+
+auto_sell_junk = run

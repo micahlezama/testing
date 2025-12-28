@@ -57,12 +57,9 @@ def run(area_id: int = None):
 
         # Execute stage
         print(Back.BLUE + Fore.WHITE + f"Completion of map: {i}/{total_maps} ({round((i / total_maps) * 100)}%)" + Style.RESET_ALL)
-        print(Fore.CYAN + f"Begin stage: {quest.name} {stage_id} | Difficulty: {s.difficulty} Deck: 1" + Fore.RESET)
+        #print(Fore.CYAN + f"Begin stage: {quest.name} {stage_id} | Difficulty: {s.difficulty} Deck: 1" + Fore.RESET)
         try:
-            start_time = time.time()
-            res = stage.run(quest.id, s.difficulty)
-            elapsed = round(time.time() - start_time)
-            print(Fore.GREEN + f"Completed stage {stage_id} in {elapsed} seconds" + Fore.RESET)
+            stage.run(quest_id, s.difficulty)
         except Exception as e:
             print(Fore.RED + f"[ERROR] Stage {stage_id} failed: {e}" + Fore.RESET)
             continue
