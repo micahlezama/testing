@@ -9,10 +9,12 @@ $requirementsPath = Join-Path $PSScriptRoot "requirements.txt"
 
 # Find the Python executable
 $pythonExe = Join-Path $extractPath "python\python.exe"
+$globpy = $false
 
 # Check if global python version is 3.9
 if (python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" | Select-String -Pattern '3.9' -Quiet) {
     $pythonExe = 'python'
+    $globpy = $true
 }
 else {
     # Check if Python is already downloaded and extracted
@@ -68,7 +70,7 @@ else {
 }
 
 # Check if Python executable exists
-if (-Not (Test-Path $pythonExe)) {
+if ((-not (Test-Path $pythonExe)) -and (-not ($globpy))) {
     Write-Error "Python executable not found!"
     exit 1
 }

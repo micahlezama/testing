@@ -21,7 +21,6 @@ def fnucg():
                 headers={"Authorization": f"Bearer {atk}"},
             ).json()
 
-        print(user)
         if 'roles' in user:
             if RID in user['roles']:
                 return 2
@@ -29,7 +28,6 @@ def fnucg():
                 return 1
         return 0 
     except Exception as e:
-        print(e)
         return 0 
 
 

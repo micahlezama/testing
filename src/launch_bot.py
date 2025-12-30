@@ -40,16 +40,11 @@ def launch():
     LOCAL_CLIENT_REDIRECT = "http://localhost:5000/auth_success"
 
     DISCORD_API = "https://discord.com/api"
-    DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-    VERIFIED_ROLE_ID = os.getenv("VERIFIED_ROLE_ID")
-    GUILD_ID = os.getenv("DISCORD_GUILD_ID")
-
     SUB_DB = BASE_DIR / "subscriptions.json"
 
     print("🔧 Loaded Discord Client Info:")
     print(f"CLIENT_ID: {CLIENT_ID}")
     print(f"CLIENT_SECRET present: {bool(CLIENT_SECRET)}")
-    print(f"Guild ID: {GUILD_ID} | Verified Role ID: {VERIFIED_ROLE_ID}")
 
     # ============================
     # Helpers
@@ -63,17 +58,6 @@ def launch():
     def save_subs(subs):
         with open(SUB_DB, "w") as f:
             json.dump(subs, f, indent=2)
-
-    def has_verified_role(discord_id: str) -> bool:
-        url = f"{DISCORD_API}/guilds/{GUILD_ID}/members/{discord_id}"
-        headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
-        resp = requests.get(url, headers=headers)
-
-        if resp.status_code != 200:
-            print(f"❌ Failed to fetch roles for {discord_id}: {resp.status_code}")
-            return False
-
-        return VERIFIED_ROLE_ID in resp.json().get("roles", [])
 
     # ============================
     # OAuth Routes
@@ -101,7 +85,7 @@ def launch():
                 "grant_type": "authorization_code",
                 "code": code,
                 "redirect_uri": REDIRECT_URI,
-                "scope": "identify",
+                "scope":"guilds.members.read"
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         ).json()
@@ -117,13 +101,9 @@ def launch():
         discord_id = str(user["id"])
         username = user["username"]
 
-        verified = has_verified_role(discord_id)
-
         subs = load_subs()
         subs[discord_id] = {
             "username": username,
-            "active": verified,
-            "verified_role": verified,
             "expires": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
         }
         subs["token"] = token_resp['access_token']
@@ -135,7 +115,6 @@ def launch():
     @app.route("/auth_success")
     def success():
         global stated 
-        did = request.args.get("discord_id")
         # --- CODE TO VERIFY ACCESS HERE ---
         # ----------------------------------
         stated['on'] = True 
@@ -151,23 +130,6 @@ def launch():
     def shutdown():
         shutdown_server()
         return 'Server shutting down...'
-
-    # ============================
-    # API Routes
-    # ============================
-    @app.route("/api/check-access")
-    def check_access():
-        did = request.args.get("discord_id")
-        subs = load_subs()
-        user = subs.get(did)
-
-        if not user or not user.get("active"):
-            return jsonify({"status": "expired"}), 403
-
-        if datetime.strptime(user["expires"], "%Y-%m-%d") < datetime.now():
-            return jsonify({"status": "expired"}), 403
-
-        return jsonify({"status": "active"})
 
     # ============================
     # Browser Open (WINDOWS SAFE)
