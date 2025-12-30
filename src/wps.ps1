@@ -94,6 +94,9 @@ try {
 try {
     Write-Host "Installing packages from requirements.txt..."
     & $pythonExe -m pip install -r $requirementsPath
+    if (-not ($globpy)) {
+        & $pythonExe -m pip install tkinter-embed
+    }
     if ($LASTEXITCODE -ne 0) {
         throw "Pip install failed with exit code $LASTEXITCODE"
     }
