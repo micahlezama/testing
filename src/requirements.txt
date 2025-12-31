@@ -1,5 +1,6 @@
 pyinstaller
 colorama
+cryptography==41.0.7
 pyCryptodome
 FreeSimpleGUI
 requests
