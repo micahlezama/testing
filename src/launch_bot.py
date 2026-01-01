@@ -3,28 +3,13 @@
 # ============================
 import os
 import json
-import signal
 import requests
-import webbrowser
-from datetime import datetime, timedelta
 from flask import Flask, redirect, request, jsonify
-from werkzeug.wrappers import Request, Response        
 from werkzeug.serving import make_server 
-from dotenv import load_dotenv
-from pathlib import Path
 from threading import Thread
 from time import sleep
 
 def launch():
-    # ============================
-    # Environment loading
-    # ============================
-    BASE_DIR = Path(__file__).resolve().parent
-    ENV_PATH = BASE_DIR / "discord.env"
-
-    load_dotenv(ENV_PATH)
-    print(f"🔧 Loading environment from: {ENV_PATH}")
-
     # ============================
     # Flask app
     # ============================
@@ -40,7 +25,7 @@ def launch():
     LOCAL_CLIENT_REDIRECT = "http://localhost:5000/auth_success"
 
     DISCORD_API = "https://discord.com/api"
-    SUB_DB = BASE_DIR / "subscriptions.json"
+    SUB_DB = "subscriptions.json"
 
     print("🔧 Loaded Discord Client Info:")
     print(f"CLIENT_ID: {CLIENT_ID}")
@@ -50,7 +35,7 @@ def launch():
     # Helpers
     # ============================
     def load_subs():
-        if not SUB_DB.exists():
+        if not os.path.exists(SUB_DB):
             return {}
         with open(SUB_DB, "r") as f:
             return json.load(f)
