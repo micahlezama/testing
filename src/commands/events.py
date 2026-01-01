@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from colorama import Back, Fore, Style
 from collections import defaultdict
 
@@ -28,7 +28,7 @@ def categorize_event(area_name: str, quest_name: str) -> str:
         return "Other Events"
 
 
-def run(selected_group: Optional[str] = None):
+def run(selected_group: Optional[Union[int, str]] = None):
     print(Fore.CYAN + "[Events] Fetching active events..." + Fore.RESET)
     events = network.get_events()
 
@@ -37,6 +37,14 @@ def run(selected_group: Optional[str] = None):
         if isinstance(events, dict) and 'error' in events:
             print(Fore.RED + f"API error: {events['error']}" + Fore.RESET)
         return
+
+    # 🔒 Normalize CLI argument (CLI may pass str or int)
+    if selected_group is not None:
+        try:
+            selected_group = int(selected_group)
+        except (ValueError, TypeError):
+            print(Fore.RED + "Invalid selection. Must be a number." + Fore.RESET)
+            return
 
     grouped = defaultdict(list)
 
@@ -79,7 +87,10 @@ def run(selected_group: Optional[str] = None):
             except Exception:
                 continue
 
-            difficulties = [StageService.get_difficulty_name(s.difficulty) for s in sugorokus]
+            difficulties = [
+                StageService.get_difficulty_name(s.difficulty)
+                for s in sugorokus
+            ]
 
             try:
                 quest_obj = models.game.Quests.get_by_id(quest_id)
@@ -91,7 +102,6 @@ def run(selected_group: Optional[str] = None):
 
         grouped[category].append((area_id, area_name, quest_entries))
 
-    # Category order
     ordered_categories = [
         "Dokkan Events",
         "Super Battle Road",
@@ -108,15 +118,7 @@ def run(selected_group: Optional[str] = None):
         "Other Events": Fore.WHITE + Style.BRIGHT
     }
 
-    # ✅ Convert CLI arg safely to int
-    if selected_group is not None:
-        try:
-            selected_group = int(selected_group)
-        except ValueError:
-            print(Fore.RED + f"Invalid input: '{selected_group}' (must be a number)." + Fore.RESET)
-            return
-
-    # If no selection → show menu
+    # Show menu if no selection
     if selected_group is None:
         print(Style.BRIGHT + "\nSelect event category:" + Style.RESET_ALL)
         for i, cat in enumerate(ordered_categories, start=1):
@@ -129,13 +131,14 @@ def run(selected_group: Optional[str] = None):
         print(Fore.RED + "Invalid selection. Try again." + Fore.RESET)
         return
 
-    # Print chosen group
+    # Display selected category
     category = ordered_categories[selected_group - 1]
     events_to_show = grouped.get(category, [])
     color = color_map.get(category, Fore.WHITE)
 
     print("")
     print(color + f"===== {category.upper()} =====" + Style.RESET_ALL)
+
     if not events_to_show:
         print(Fore.YELLOW + "No events found for this category." + Fore.RESET)
         return
@@ -143,7 +146,11 @@ def run(selected_group: Optional[str] = None):
     for area_id, area_name, quests in events_to_show:
         print(Back.WHITE + Fore.BLACK + f"[{area_id}] {area_name}" + Style.RESET_ALL)
         for quest_id, quest_name, diffs in quests:
-            diff_str = ", ".join([Fore.CYAN + d + Fore.RESET for d in diffs]) or "None"
-            print(f"  {Fore.WHITE}{quest_id}{Fore.RESET} {Fore.GREEN}{quest_name}{Fore.RESET} [{diff_str}]")
+            diff_str = ", ".join(Fore.CYAN + d + Fore.RESET for d in diffs) or "None"
+            print(
+                f"  {Fore.WHITE}{quest_id}{Fore.RESET} "
+                f"{Fore.GREEN}{quest_name}{Fore.RESET} "
+                f"[{diff_str}]"
+            )
 
     print(Fore.CYAN + f"\n[Events] ✅ Done showing {category}." + Fore.RESET)
