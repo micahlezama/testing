@@ -11,15 +11,17 @@ def fnucg():
     #GID = '1454921015120367832'
     #RID = '1454924365258035323'
     try:
-        with open('subscriptions.json') as f:
+        with open('src/subscriptions.json') as f:
             sbd = json.load(f)
         
         atk = sbd['token']
+
 
         user = requests.get(
                 f"{DISCORD_API}/users/@me/guilds/{GID}/member",
                 headers={"Authorization": f"Bearer {atk}"},
             ).json()
+
 
         if 'roles' in user:
             if RID in user['roles']:

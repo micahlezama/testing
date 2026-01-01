@@ -33,8 +33,8 @@ def launch():
     # ============================
     # Discord App Info
     # ============================
-    CLIENT_ID = "1431320716740919296"
-    CLIENT_SECRET = "QppclEui2K3Bq3Rs9FfmmXl1oEOEuaWP"
+    CLIENT_ID = "1431702681616912414"
+    CLIENT_SECRET = "Jg1SSdOo8hgrd6zXVoN1N88osoj2_J7Z"
 
     REDIRECT_URI = "http://localhost:5000/callback"
     LOCAL_CLIENT_REDIRECT = "http://localhost:5000/auth_success"
@@ -75,6 +75,7 @@ def launch():
 
     @app.route("/callback")
     def callback():
+        print(request.args)
         code = request.args.get("code")
 
         token_resp = requests.post(
@@ -93,24 +94,13 @@ def launch():
         if "access_token" not in token_resp:
             return jsonify(token_resp), 400
 
-        user = requests.get(
-            f"{DISCORD_API}/users/@me",
-            headers={"Authorization": f"Bearer {token_resp['access_token']}"},
-        ).json()
-
-        discord_id = str(user["id"])
-        username = user["username"]
-
         subs = load_subs()
-        subs[discord_id] = {
-            "username": username,
-            "expires": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
-        }
+
         subs["token"] = token_resp['access_token']
 
         save_subs(subs)
 
-        return redirect(f"{LOCAL_CLIENT_REDIRECT}?id={discord_id}&user={username}")
+        return redirect(f"{LOCAL_CLIENT_REDIRECT}")
 
     @app.route("/auth_success")
     def success():
