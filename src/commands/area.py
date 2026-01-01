@@ -4,12 +4,13 @@ from colorama import Fore, Back, Style
 from commands import stage
 import network
 import time
+from typing import Optional, Union
 
 NAME = 'area'
 DESCRIPTION = 'Completes all quests within a given area'
 CONTEXT = [config.GameContext.GAME]
 
-def run(area_id: int = None):
+def run(area_id: Optional[Union[int, str]] = None):
     if area_id is None:
         print(Fore.RED + "[ERROR] You must specify an area ID (e.g. area 1)" + Fore.RESET)
         return
