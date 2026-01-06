@@ -73,7 +73,7 @@ class StageService:
                 if err_code == "unavailable_quest":
                     print(f"[Stage] ⚠️ Quest {stage_id} is unavailable — skipping.")
                 elif err_code == "invalid_token":
-                    print(Fore.YELLOW + "[Stage] Token invalid — please re-login." + Style.RESET_ALL)
+                    res['result'] = 'relogin'
                 elif err_code == "active_record/record_not_found":
                     print(Fore.RED + "[Stage] Quest not found." + Style.RESET_ALL)
                 elif err_code == "invalid_area_conditions_potential_releasable":

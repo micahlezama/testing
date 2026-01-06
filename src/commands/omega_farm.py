@@ -4,6 +4,7 @@ from colorama import Fore, Back, Style
 from commands import stage
 from commands.autocleanup import auto_sell_junk
 import network
+from time import sleep
 
 NAME = 'omega farm'
 DESCRIPTION = 'Completes all quests, skipping cleared or unavailable ones automatically'
@@ -72,8 +73,13 @@ def run():
                 + Style.RESET_ALL
             )
 
-            if stage.run(sugoroku.quest_id, difficulty):
-                completed += 1
+            try:
+                if stage.run(sugoroku.quest_id, difficulty):
+                    completed += 1
+            except Exception as e:
+                print(f'Error happened while trying to clear stage ({e})')
+                print(f'Retrying in 10 seconds...')
+                sleep(10)
 
         # --- Progress ---
         print(

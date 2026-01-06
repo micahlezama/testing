@@ -62,7 +62,7 @@ class GameContext(Enum):
 
 client: ClientConfig = ClientConfig(path=Path(ROOT_DIR, 'config.json'))
 game_env: GameEnvironment = GB_ENV
-game_platform: GamePlatform = IOS_PLATFORM
+game_platform: GamePlatform = ANDROID_PLATFORM 
 game_account: Optional[GameAccount] = None
 game_context: GameContext = GameContext.AUTH
 

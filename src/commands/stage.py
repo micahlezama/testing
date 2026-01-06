@@ -11,6 +11,7 @@ import models.game
 import network
 from commands import act
 from services.stage import StageService
+from services.account import AccountService
 
 NAME = 'stage'
 DESCRIPTION = 'Completes the given stage'
@@ -77,6 +78,10 @@ def run(stage_id: int, difficulty: int, kagi: Optional[int] = None):
             return run(stage_id, difficulty, kagi)
         except Exception as cleanup_error:
             print(Fore.RED + f"[Stage] Auto-cleanup failed: {cleanup_error}" + Style.RESET_ALL)
+        return 0
+    elif r['result'] == 'relogin':
+        print(Fore.YELLOW + "[Stage] Token invalid — trying to re-login." + Style.RESET_ALL)
+        config.game_account = AccountService.login(config.game_account)
         return 0
     else:
         return 0

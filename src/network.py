@@ -70,7 +70,7 @@ def __get(endpoint: str, params: Optional[Any] = None):
 
     url = config.game_env.url + endpoint
     headers = __generate_headers('GET', endpoint)
-    res = requests.get(url, headers=headers)
+    res = requests.get(url, headers=headers, timeout=20)
     #print(res.json())
     return res.json() if res.status_code != 204 else None
 
@@ -79,7 +79,7 @@ def __put(endpoint: str, data: Optional[dict[str, Any]] = None):
     headers = __generate_headers('PUT', endpoint)
     url = config.game_env.url + endpoint
     data = __purge_none(data)
-    res = requests.put(url, headers=headers, data=json.dumps(data) if data is not None else None)
+    res = requests.put(url, headers=headers, data=json.dumps(data) if data is not None else None, timeout=20)
     
     return res.json() if res.status_code != 204 else None
 
@@ -88,7 +88,7 @@ def __post(endpoint: str, data: Optional[dict[str, Any]] = None):
     headers = __generate_headers('POST', endpoint)
     url = config.game_env.url + endpoint
     data = __purge_none(data)
-    res = requests.post(url, headers=headers, data=json.dumps(data) if data is not None else None)
+    res = requests.post(url, headers=headers, data=json.dumps(data) if data is not None else None, timeout=20)
     return res.json() if res.status_code != 204 else None
 
 
@@ -99,6 +99,16 @@ def get_user():
 def get_user_areas():
     return __get('/user_areas')
 
+def get_user_zbattles():
+    r = get_user_areas()
+    if 'user_z_battles' in r:
+        zbattles = r['user_z_battles']
+        if zbattles == []:
+            zbattles = 0
+    else:
+        zbattles = 0
+    
+    return zbattles
 
 def get_events():
     return __get('/events')
@@ -284,6 +294,7 @@ def get_quests_supporters(stage_id: int, difficulty: int, team_num: int):
         r["cpu_supporters"] = {}
 
     return r
+
 def get_quests():
     data = __get('/user_areas')
     quests = []
