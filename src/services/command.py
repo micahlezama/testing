@@ -1,11 +1,11 @@
-#import auth
-#try:
-#    if not auth.zn():
-#        import sys
-#        sys.exit(0)
-#except Exception as e:
-#    import sys
-#    sys.exit(0)
+import auth
+try:
+    if not auth.zn():
+        import sys
+        sys.exit(0)
+except Exception as e:
+    import sys
+    sys.exit(0)
 
 import importlib
 import pkgutil
