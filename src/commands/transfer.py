@@ -14,6 +14,21 @@ DESCRIPTION = 'Transfer a google account'
 CONTEXT = [config.GameContext.AUTH]
 
 def run(save_as: str):
+    while True:
+        res = input('Account platform?' + '\n' + 
+                '(1) Android' + '\n' +
+                '(2) IOS' + '\n' +
+                '(q) Cancel' + '\n')
+        if res in ('1', '2', 'q'):
+            if res == '1':
+                config.game_platform = config.ANDROID_PLATFORM
+                break
+            elif res == '2':
+                config.game_platform = config.IOS_PLATFORM
+                break
+            else:
+                return
+
     print("[Transfer] Opening browser for authentication...") 
     token = network.get_gtoken()
     val_sign = network.post_auth_link(token, validate=True)['sign']
@@ -28,7 +43,7 @@ def run(save_as: str):
 
         while True:
             ans = input(Fore.LIGHTRED_EX + 
-                        f'[Transfer] Do you want to transfer from {cp} -> {tp}?')
+                        f'[Transfer] Do you want to transfer from {tp} -> {cp}? ')
             if ans == 'no':
                 return
             elif ans == 'yes':

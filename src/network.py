@@ -450,74 +450,6 @@ def post_auth_signin(
     #__print_response(res)
     return res.json()
 
-def request_token(code: str):
-    token_url = 'https://oauth2.googleapis.com/token' 
-    google_client_id = '33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com'
-    payload = {
-                'audience': '33528429135-tosmtg8e15lp4l2bulmj8nc5un2ba7s3.apps.googleusercontent.com',
-                'client_id': google_client_id,
-                'code': code,
-                'grant_type': 'authorization_code',
-                'redirect_uri': 'com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh:/oauth2callback'
-            }
-            
-    try:
-        headers = {
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Content-Length': '378',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Host': 'oauth2.googleapis.com',
-            'User-Agent': config.game_platform.user_agent
-        }
-        response = requests.post(token_url, headers=headers, data=payload)
-        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
-        token_data = response.json()
-        
-    except requests.exceptions.RequestException as e:
-        print(f"\n--- Error during token exchange: {e} ---")
-    
-    return token_data["id_token"]
-
-
-def post_auth_link(token: str, validate: bool=False, uid: str=''):
-    data = json.dumps({
-        'token':token
-    })
-
-    headers = __purge_none({
-        'User-Agent': config.game_platform.user_agent,
-        'Accept': '*/*',
-        'Content-type': 'application/json',
-        'X-ClientVersion': config.game_env.version_code,
-        'X-Language': 'en',
-        'X-UserCountry': config.game_env.country,
-        'X-UserCurrency': config.game_env.currency,
-        'X-Platform': config.game_platform.name,
-    })
-
-    url = 'https://ishin-global.aktsk.com/user/succeed/google'
-    if validate:
-        url = url + '/validate'
-        res = requests.post(url, headers=headers, data=data)
-    else:
-        data = {
-            'token': token,
-            'user_account': {
-                "device": config.game_platform.device_name,
-                "device_model": config.game_platform.device_model, 
-                "os_version": config.game_platform.os_version,
-                "platform": config.game_platform.name, 
-                "unique_id": uid 
-            }
-        }
-        data = json.dumps(data)
-        res = requests.put(url, headers=headers, data=data)
-
-    res.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
-    return res.json()
 
 GURL = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com&redirect_uri=com.googleusercontent.apps.33528429135-fg507svof8s85i1c32isr6ci5radpqqh%3A%2Foauth2callback&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgames&prompt=consent&hl=en-US"
 
@@ -528,7 +460,12 @@ def google_login():
     code = None
 
     opts = Options()
-    opts.add_argument('user-agent=Mozilla/5.0 (Linux; Android 12; moto g 5G (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36 ')
+
+    if config.game_platform.name == 'ios':
+        uarg = 'user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 18_7_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1'
+    else:
+        uarg = 'user-agent=Mozilla/5.0 (Linux; U; Android 11; Pixel 5 Build/RQ3A.210805.001.A1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1'
+    opts.add_argument(uarg)
     opts.add_experimental_option("excludeSwitches", ["enable-automation"])
     opts.add_experimental_option('useAutomationExtension', False)
     opts.add_argument('--disable-blink-features=AutomationControlled')
@@ -558,7 +495,7 @@ def request_gtoken(code: str):
     token_url = 'https://oauth2.googleapis.com/token' 
     google_client_id = '33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com'
     payload = {
-                'audience': '33528429135-tosmtg8e15lp4l2bulmj8nc5un2ba7s3.apps.googleusercontent.com',
+                'audience': '33528429135-tosmtg8e15lp4l2bulmj8nc5un2ba7s3.apps.googleusercontent.com' if config.game_platform.name != 'ios' else '33528429135-fg507svof8s85i1c32isr6ci5radpqqh.apps.googleusercontent.com',
                 'client_id': google_client_id,
                 'code': code,
                 'grant_type': 'authorization_code',

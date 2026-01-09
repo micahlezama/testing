@@ -24,10 +24,10 @@ ANDROID_PLATFORM = GamePlatform(
 
 IOS_PLATFORM = GamePlatform(
     name='ios',
-    user_agent='CFNetwork/808.3 Darwin/16.3.0 (iPhone; CPU iPhone OS 13_0 like Mac OS X)',
+    user_agent='CFNetwork/808.3 Darwin/16.3.0 (iPhone; CPU iPhone OS 18_7_3 like Mac OS X)',
     device_name='iPhone',
     device_model='iPhone XR',
-    os_version='13.0'
+    os_version='18.7'
 )
 
 GB_ENV = GameEnvironment(
