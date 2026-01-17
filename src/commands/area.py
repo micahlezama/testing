@@ -35,14 +35,12 @@ def run(area_id: Optional[Union[int, str]] = None):
     # Collect all maps for the area
     for quest in area_quests:
         sugorokus = list(models.game.SugorokuMaps.select().where(models.game.SugorokuMaps.quest_id == quest.id))
-        for s in sugorokus:
-            total_maps += 1
-            quest_maps.append((quest, s))
+        quest_maps.append((quest, sugorokus[-1]))
+        total_maps += 1
 
     print(Fore.CYAN + f"[DEBUG] Total maps to complete: {total_maps}" + Fore.RESET)
 
     # === 3. Iterate through maps and skip cleared ones ===
-    completed = 0
     for i, (quest, s) in enumerate(quest_maps, start=1):
         quest_id = int(s.quest_id)
         stage_id = int(s.id)
@@ -60,7 +58,7 @@ def run(area_id: Optional[Union[int, str]] = None):
         print(Back.BLUE + Fore.WHITE + f"Completion of map: {i}/{total_maps} ({round((i / total_maps) * 100)}%)" + Style.RESET_ALL)
         #print(Fore.CYAN + f"Begin stage: {quest.name} {stage_id} | Difficulty: {s.difficulty} Deck: 1" + Fore.RESET)
         try:
-            stage.run(quest_id, s.difficulty)
+            stage.run(quest_id)
         except Exception as e:
             print(Fore.RED + f"[ERROR] Stage {stage_id} failed: {e}" + Fore.RESET)
             continue

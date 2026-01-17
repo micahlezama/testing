@@ -7,6 +7,8 @@
 # Description   :
 #
 
+from colorama import Fore, Style
+from multiprocessing.pool import Pool
 
 from pysqlsimplecipher import config
 from pysqlsimplecipher import util
@@ -48,6 +50,28 @@ def decrypt_default(raw, password):
                    hmac_sz)
 
 
+def dec_part(psi, pei, raw, page_sz, salt_sz, reserve_sz, iv_sz, hmac_key, hmac_sz, key, prnt=False):
+    bf = b''
+    for i in range(psi, pei):
+        if prnt:
+            print(Fore.RED + Style.BRIGHT + f' Progress: {i}/{pei}     ',  end='\r')
+        page = util.get_page(raw, page_sz, i + 1)
+        if i == 0:
+            # skip salt
+            page = page[salt_sz:]
+        page_content = page[:-reserve_sz]
+        reserve = page[-reserve_sz:]
+        iv = reserve[:iv_sz]
+        # check hmac
+        hmac_old = reserve[iv_sz:iv_sz + hmac_sz]
+        hmac_new = util.generate_hmac(hmac_key, page_content + iv, i + 1)
+        if not hmac_old == hmac_new:
+            raise RuntimeError('hmac check failed in page %d.' % (i + 1))
+        # decrypt content
+        page_dec = util.decrypt(page_content, key, iv)
+        bf += page_dec + util.random_bytes(reserve_sz)
+    return bf
+
 def decrypt(raw, password, salt_mask, key_sz, key_iter, hmac_key_sz, hmac_key_iter, page_sz, iv_sz, reserve_sz,
             hmac_sz):
     dec = b'SQLite format 3\0'
@@ -63,22 +87,29 @@ def decrypt(raw, password, salt_mask, key_sz, key_iter, hmac_key_sz, hmac_key_it
         raise RuntimeError('failed to decide page size or reserve size.')
 
     # decrypt pages
-    for i in range(0, int(len(raw) / 1024)):
-        page = util.get_page(raw, page_sz, i + 1)
-        if i == 0:
-            # skip salt
-            page = page[salt_sz:]
-        page_content = page[:-reserve_sz]
-        reserve = page[-reserve_sz:]
-        iv = reserve[:iv_sz]
-        # check hmac
-        hmac_old = reserve[iv_sz:iv_sz + hmac_sz]
-        hmac_new = util.generate_hmac(hmac_key, page_content + iv, i + 1)
-        if not hmac_old == hmac_new:
-            raise RuntimeError('hmac check failed in page %d.' % (i + 1))
-        # decrypt content
-        page_dec = util.decrypt(page_content, key, iv)
-        dec += page_dec + util.random_bytes(reserve_sz)
+    bszi = int(len(raw) / 1024)
+    pool = Pool(processes=7)
+
+    lor = []
+    for ti in range(7):
+        cszsi = int(ti * (bszi / 8))
+        cszei = int((ti + 1) * (bszi / 8))
+        lor.append(pool.apply_async(func=dec_part, args=(cszsi, 
+                                                         cszei, 
+                                                  raw, page_sz, 
+                                                  salt_sz, 
+                                                  reserve_sz, 
+                                                  iv_sz, hmac_key, 
+                                                  hmac_sz, key)))
+
+    li = int(7 * (bszi / 8))
+    lp = dec_part(li, bszi, raw, page_sz, salt_sz,
+                  reserve_sz, iv_sz, hmac_key, hmac_sz, key, 
+                  prnt=True)
+    for r in lor:
+        dec += r.get()
+
+    dec += lp
 
     return dec
 

@@ -53,33 +53,34 @@ def run():
             .where(models.game.SugorokuMaps.quest_id == quest_id)
         )
 
-        for sugoroku in sugorokus:
-            difficulty = sugoroku.difficulty
+        lodf = []
+        sugoroku = sugorokus[-1]
+        difficulty = sugoroku.difficulty
 
-            # === Skip cleared difficulty ===
-            if sugoroku.id in cleared_sugoroku_ids:
-                skipped_cleared += 1
-                print(
-                    Fore.YELLOW
-                    + f"[Omega] [SKIP] Quest {quest_id} "
-                    + f"Difficulty {difficulty} already cleared."
-                    + Fore.RESET
-                )
-                continue
-
+        # === Skip cleared difficulty ===
+        if sugoroku.id in cleared_sugoroku_ids:
+            skipped_cleared += 1
             print(
                 Fore.YELLOW
-                + f"[Omega] Running quest {quest_id} - Difficulty {difficulty}"
-                + Style.RESET_ALL
+                + f"[Omega] [SKIP] Quest {quest_id} "
+                + f"Difficulty {difficulty} already cleared."
+                + Fore.RESET
             )
+            continue
 
-            try:
-                if stage.run(sugoroku.quest_id, difficulty):
-                    completed += 1
-            except Exception as e:
-                print(f'Error happened while trying to clear stage ({e})')
-                print(f'Retrying in 10 seconds...')
-                sleep(10)
+        print(
+            Fore.YELLOW
+            + f"[Omega] Running quest {quest_id} - Difficulty {difficulty}"
+            + Style.RESET_ALL
+        )
+
+        try:
+            if stage.run(sugoroku.quest_id):
+                completed += 1
+        except Exception as e:
+            print(f'Error happened while trying to clear stage ({e})')
+            print(f'Retrying in 10 seconds...')
+            sleep(10)
 
         # --- Progress ---
         print(
