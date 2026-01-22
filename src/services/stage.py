@@ -83,6 +83,7 @@ class StageService:
                 elif err_code == "the_number_of_cards_must_be_less_than_or_equal_to_the_capacity":
                     res['result'] = 'full_box'
                 else:
+                    print(res)
                     print(f"[Stage] Unhandled error: {err_code}")
         return res
 

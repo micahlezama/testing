@@ -23,7 +23,7 @@ class CommandService:
     @staticmethod
     def load():
         prem_cmds = ('eza farm',)
-        prem = 2#auth.zn() == 2
+        prem = auth.zn() == 2
         modules = pkgutil.iter_modules(commands.__path__, commands.__name__ + '.')
         loaded_modules = {
             CommandService.__commands[command_name].__name__: command_name

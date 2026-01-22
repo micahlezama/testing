@@ -21,11 +21,9 @@ def encrypt(raw, key, iv):
     cipher = AES.new(key, AES.MODE_CBC, iv)
     return cipher.encrypt(raw)
 
-
 def decrypt(raw, key, iv):
     cipher = AES.new(key, AES.MODE_CBC, iv)
     return cipher.decrypt(raw)
-
 
 def is_valid_database_header(header):
     return header[:16] == b'SQLite format 3\0' and is_valid_decrypted_header(header[16:])
@@ -70,20 +68,20 @@ def random_bytes(n):
 
 def key_derive(salt, password, salt_mask, key_sz, key_iter, hmac_key_sz, hmac_key_iter):
     """Derive an encryption key for page encryption/decryption, an key for hmac generation"""
-    key = hashlib.pbkdf2_hmac('sha1', password, salt, key_iter, key_sz)
+    key = hashlib.pbkdf2_hmac('sha512', password, salt, key_iter, key_sz)
 
     try:
         hmac_salt = bytearray([x ^ salt_mask for x in salt])
-        hmac_key = hashlib.pbkdf2_hmac('sha1', key, hmac_salt, hmac_key_iter, hmac_key_sz)
+        hmac_key = hashlib.pbkdf2_hmac('sha512', key, hmac_salt, hmac_key_iter, hmac_key_sz)
     except TypeError:  # python2
         hmac_salt = b''
         for x in salt:
             hmac_salt += chr(ord(x) ^ salt_mask)
-        hmac_key = hashlib.pbkdf2_hmac('sha1', str(key), hmac_salt, hmac_key_iter, hmac_key_sz)
+        hmac_key = hashlib.pbkdf2_hmac('sha512', str(key), hmac_salt, hmac_key_iter, hmac_key_sz)
     return key, hmac_key
 
 
 def generate_hmac(hmac_key, content, page_no):
-    hmac_obj = hmac.new(hmac_key, content, hashlib.sha1)
+    hmac_obj = hmac.new(hmac_key, content, hashlib.sha512)
     hmac_obj.update(struct.pack('<i', page_no))
     return hmac_obj.digest()

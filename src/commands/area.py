@@ -10,7 +10,7 @@ NAME = 'area'
 DESCRIPTION = 'Completes all quests within a given area'
 CONTEXT = [config.GameContext.GAME]
 
-def run(area_id: Optional[Union[int, str]] = None):
+def run(area_id: Optional[Union[int, str]] = None, skip=True):
     if area_id is None:
         print(Fore.RED + "[ERROR] You must specify an area ID (e.g. area 1)" + Fore.RESET)
         return
@@ -46,7 +46,7 @@ def run(area_id: Optional[Union[int, str]] = None):
         stage_id = int(s.id)
 
         # Skip if already cleared
-        if stage_id in cleared_ids:
+        if skip and stage_id in cleared_ids:
             print(Fore.YELLOW + f"[SKIP] Stage {stage_id} already cleared. ({quest.name})" + Fore.RESET)
            # user_response = print(Fore.YELLOW + "Would you like to clear it again? Y/N")
             #if user_response() == 'Y':

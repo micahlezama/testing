@@ -27,7 +27,7 @@ class DatabaseService:
         temp_db_path = Path(config.game_env.db_path.parent, temp_db_name)
         open(temp_db_path, 'wb').write(res.content)
 
-        print(Fore.RED + Style.BRIGHT + 'Decrypting latests database... This can take a few minutes...')
+        print(Fore.RED + Style.BRIGHT + 'Decrypting latests database...')
         decrypt_file(str(temp_db_path), config.game_env.db_password, str(config.game_env.db_path.absolute()))
         config.client.gb_db_version = dist_db_version
         config.client.save()

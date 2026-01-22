@@ -8,7 +8,6 @@
 #
 
 from colorama import Fore, Style
-from multiprocessing.pool import Pool
 
 from pysqlsimplecipher import config
 from pysqlsimplecipher import util
@@ -27,11 +26,12 @@ def decrypt_file(filename_in, password, filename_out):
         raw = fp.read()
 
     # decrypt
-    dec = decrypt_default(raw, password)
+    lodec = decrypt_default(raw, password)
 
     # write
     with open(filename_out, 'wb') as fp:
-        fp.write(dec)
+        for dec in lodec:
+            fp.write(dec)
 
 
 def decrypt_default(raw, password):
@@ -74,7 +74,7 @@ def dec_part(psi, pei, raw, page_sz, salt_sz, reserve_sz, iv_sz, hmac_key, hmac_
 
 def decrypt(raw, password, salt_mask, key_sz, key_iter, hmac_key_sz, hmac_key_iter, page_sz, iv_sz, reserve_sz,
             hmac_sz):
-    dec = b'SQLite format 3\0'
+    lodec = [b'SQLite format 3\0',]
 
     # derive key
     salt_sz = 16
@@ -86,32 +86,51 @@ def decrypt(raw, password, salt_mask, key_sz, key_iter, hmac_key_sz, hmac_key_it
     if page_sz < 0 or reserve_sz < 0:
         raise RuntimeError('failed to decide page size or reserve size.')
 
+    for i in range(0, int(len(raw) / 4096)):
+        page = util.get_page(raw, page_sz, i + 1)
+        if i == 0:
+            # skip salt
+            page = page[salt_sz:]
+        page_content = page[:-reserve_sz]
+        reserve = page[-reserve_sz:]
+        iv = reserve[:iv_sz]
+        # check hmac
+        hmac_old = reserve[iv_sz:iv_sz+hmac_sz]
+        hmac_new = util.generate_hmac(hmac_key, page_content + iv, i + 1)
+        if not hmac_old == hmac_new:
+            raise RuntimeError('hmac check failed in page %d.' % (i+1))
+        # decrypt content
+        page_dec = util.decrypt(page_content, key, iv)
+        rndbts = util.random_bytes(reserve_sz)
+        lodec.append(page_dec + rndbts)
+    # Opening more processes to decrypt
     # decrypt pages
-    bszi = int(len(raw) / 1024)
-    pool = Pool(processes=7)
+    #bszi = int(len(raw) / 1024)
+    #pool = Pool(processes=7)
 
-    lor = []
-    for ti in range(7):
-        cszsi = int(ti * (bszi / 8))
-        cszei = int((ti + 1) * (bszi / 8))
-        lor.append(pool.apply_async(func=dec_part, args=(cszsi, 
-                                                         cszei, 
-                                                  raw, page_sz, 
-                                                  salt_sz, 
-                                                  reserve_sz, 
-                                                  iv_sz, hmac_key, 
-                                                  hmac_sz, key)))
+    #lor = []
+    #for ti in range(7):
+    #    cszsi = int(ti * (bszi / 8))
+    #    cszei = int((ti + 1) * (bszi / 8))
+    #    lor.append(pool.apply_async(func=dec_part, args=(cszsi, 
+    #                                                     cszei, 
+    #                                              raw, page_sz, 
+    #                                              salt_sz, 
+    #                                              reserve_sz, 
+    #                                              iv_sz, hmac_key, 
+    #                                              hmac_sz, key)))
 
-    li = int(7 * (bszi / 8))
-    lp = dec_part(li, bszi, raw, page_sz, salt_sz,
-                  reserve_sz, iv_sz, hmac_key, hmac_sz, key, 
-                  prnt=True)
-    for r in lor:
-        dec += r.get()
+    #li = int(7 * (bszi / 8))
+    #lp = dec_part(li, bszi, raw, page_sz, salt_sz,
+    #              reserve_sz, iv_sz, hmac_key, hmac_sz, key, 
+    #              prnt=True)
+    #for r in lor:
+    #    dec += r.get()
 
-    dec += lp
+    #dec += lp
+    # ----------------------------------------
 
-    return dec
+    return lodec 
 
 
 def decrypt_page_header(raw, key, salt_sz, page_sz, iv_sz, reserve_sz):
@@ -129,7 +148,6 @@ def decrypt_page_header(raw, key, salt_sz, page_sz, iv_sz, reserve_sz):
     if new_reserve_sz > 0:  # default page_sz is ok
         return page_sz, new_reserve_sz
 
-    page_sz = 512
     while page_sz <= 65536:
         new_reserve_sz = try_get_reserve_size_for_specified_page_size(raw, key, salt_sz, page_sz, iv_sz, reserve_sz)
         if new_reserve_sz > 0:
