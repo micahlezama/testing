@@ -109,7 +109,7 @@ def run():
              [sg.Button(button_text='Confirm and awaken', key='confirm_setup')]]
 
     layout = [[sg.Column(col1)]]
-    window = sg.Window('Link Skills Farm', grab_anywhere=True, keep_on_top=True).Layout(layout)
+    window = sg.Window('Awaken characters', grab_anywhere=True, keep_on_top=True).Layout(layout)
 
     ###Begin window loop
     chosen_unique_ids = []
