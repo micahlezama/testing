@@ -3,12 +3,60 @@ from colorama import Fore, Style
 
 import network
 from models import game
+from utils.dbutils import card_chid
 
 from config import GameContext
 
 NAME = 'change-team'
 DESCRIPTION = 'Change your deck'
 CONTEXT = [GameContext.GAME]
+
+def fill_team(locui, ucards, lochid):
+    for ucard in ucards:
+        chid = card_chid(ucard['card_id'])
+        if chid in lochid:
+            continue
+        for cui in locui:
+            if ucard['id'] == cui:
+                break
+        else:
+            locui.append(ucard['id'])
+            lochid.append(chid)
+            if len(locui) == 6:
+                break
+    return locui
+
+def remove_same_char(locui, ucards):
+    lochid = []
+    nlocui = []
+    for cui in locui:
+        for ucard in ucards:
+            if ucard['id'] == cui:
+                chid = card_chid(ucard['card_id'])
+                if not (chid in lochid):
+                    lochid.append(chid)
+                    nlocui.append(cui)
+    return nlocui, lochid
+
+def build_team(locui, deckn, ucards):
+    locui, lochid = remove_same_char(locui, ucards)
+    if len(locui) < 6:
+        print(Fore.YELLOW + f'{len(locui)} Awakened characters, filling the rest...')
+        locui = fill_team(locui, ucards, lochid)
+    elif len(locui) > 6:
+        locui = locui[:6]
+
+    r = network.post_teams(
+        selected_team_num=1,
+        user_card_teams=[
+            {'num': deckn, 'user_card_ids': locui}
+        ]
+    )
+
+    if 'error' in r:
+        print(Fore.RED + Style.BRIGHT + str(r))
+    else:
+        print(Fore.GREEN + Style.BRIGHT + "Deck updated!")
 
 def run():
     # Needs to have translation properly implemented!
@@ -247,17 +295,6 @@ def run():
 
     window.Close()
     ###Send selected team to bandai
-    r = network.post_teams(
-        selected_team_num=1,
-        user_card_teams=[
-            {'num': chosen_deck, 'user_card_ids': chosen_cards_unique_ids}
-        ]
-    )
-
-    if 'error' in r:
-        print(Fore.RED + Style.BRIGHT + str(r))
-    else:
-        print(chosen_cards_names)
-        print(Fore.GREEN + Style.BRIGHT + "Deck updated!")
+    build_team(chosen_cards_ids, chosen_deck, master_cards)
 
     return 0

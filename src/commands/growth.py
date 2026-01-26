@@ -6,6 +6,8 @@ import network
 
 from models import game
 from commands import area 
+from commands.awaken import awaken_team
+from commands.change_team import build_team
 
 
 NAME = 'link-farm'
@@ -127,38 +129,43 @@ def run():
         ###Re-populate cards to display, checking filter criteria
         cards_to_display[:] = []
         for char in cards_to_display_dicts:
-            for ls in char['Links']:
+            for i, ls in enumerate(char['Links']):
                 if (ls.name + str(char['UniqueID'])) in chosen_skill_mix:
                     continue
                 cards_to_display.append(
                     str(char['UniqueID']) + ' | ' + str(char['Name'])
-                    + ' | ' + str(ls.id) + ' | ' + str(ls.name))
+                    + ' | ' + str(ls.id) + ' | ' + str(ls.name) + ' | ' + str(char['Link_levels'][i]))
 
         window.find_element('CARDS').Update(values=cards_to_display)
         window.find_element('CARDS_CHOSEN').Update(values=chosen_cards_to_display)
 
     window.Close()
 
+    ltm = []
     while skills_levelup:
         link_fulfilled(skills_levelup)
-        tids = team_ids(skills_levelup)
-        tids = awaken_team(tids)
-        build_team(tids)
+        tuids, tids = team_aids(skills_levelup, master_cards)
+        if set(tuids) != set(ltm):
+            tuids = awaken_team(tuids, tids, master_cards)
+            ltm = tuids.copy()
+            master_cards = network.get_cards()['cards']
+            build_team(tuids, 1, master_cards)
         link_farm()
-    ##Send Link level up
-    #r = network.post_link_lvl_up()
-    #if 'error' in r:
-    #    print(Fore.RED + Style.BRIGHT + str(r))
-    #else:
-    #    print(Fore.GREEN + Style.BRIGHT + "Link level up complete!")
+
+    print(Fore.GREEN + Style.BRIGHT + "Link level up complete!")
 
     return 0
 
-def team_ids(locsl):
+def team_aids(locsl, lomc):
+    louci = []
     loci = []
     for tcid, _, _ in locsl:
-        loci.append(tcid)
-    return loci
+        for mc in lomc:
+            if mc['id'] == tcid: 
+                loci.append(mc['card_id'])
+                break
+        louci.append(mc['id'])
+    return louci, loci
 
 cuai = 5
 

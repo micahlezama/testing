@@ -600,18 +600,13 @@ class CardDecorations(BaseModel):
 
 class CardExps(BaseModel):
     created_at = DateTimeField()
-    exp_total = IntegerField(constraints=[SQL("DEFAULT 0")])
-    exp_type = IntegerField(constraints=[SQL("DEFAULT 0")])
     lv = IntegerField(constraints=[SQL("DEFAULT 0")])
+    exp_type = IntegerField(constraints=[SQL("DEFAULT 0")])
+    exp_total = IntegerField(constraints=[SQL("DEFAULT 0")])
     updated_at = DateTimeField()
 
     class Meta:
         table_name = 'card_exps'
-        indexes = (
-            (('exp_total', 'lv', 'exp_type'), True),
-            (('exp_type', 'exp_total'), True),
-            (('lv', 'exp_type'), True),
-        )
 
 
 class CardGrowths(BaseModel):

@@ -121,6 +121,8 @@ def get_eventkagi_items():
 def get_cards():
     return __get('/cards')
 
+def get_train_items():
+    return __get('/training_items')
 
 def get_client_assets_database():
     return __get('/client_assets/database')
@@ -591,6 +593,16 @@ def post_teams(
     'user_card_teams': user_card_teams
 })
 
+def put_awaken(card_uid: int, awake_nums: list[int], 
+                awake_route_id: int,):
+    data = {
+        "awakening_nums": awake_nums, # [1, 2, 3, 4, 5]
+        "awakening_route_id": awake_route_id # 6491
+    }
+    return __put(f'/cards/{card_uid}/awake', data=data)
+
+def put_train(card_uid: int, tdata: dict):
+    return __put(f'/cards/{card_uid}/bulk_train', data=tdata)
 
 def post_rmbattles_start(
         clash_id: str,

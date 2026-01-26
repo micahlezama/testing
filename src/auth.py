@@ -16,7 +16,6 @@ def fnucg():
         
         atk = sbd['token']
 
-
         user = requests.get(
                 f"{DISCORD_API}/users/@me/guilds/{GID}/member",
                 headers={"Authorization": f"Bearer {atk}"},
