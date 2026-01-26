@@ -46,43 +46,51 @@ def run():
     for i, quest in enumerate(quests, start=1):
         quest_id = int(quest.id)
 
-        # --- Fetch difficulties (sugoroku maps) ---
+        # Fetch all difficulties for this quest
         sugorokus = list(
             models.game.SugorokuMaps
             .select()
             .where(models.game.SugorokuMaps.quest_id == quest_id)
         )
 
-        lodf = []
-        sugoroku = sugorokus[-1]
-        difficulty = sugoroku.difficulty
+        # Sort difficulties from easiest → hardest
+        sugorokus.sort(key=lambda x: x.difficulty)
 
-        # === Skip cleared difficulty ===
-        if sugoroku.id in cleared_sugoroku_ids:
+        # We want the *hardest* uncleared difficulty
+        target_stage = None
+
+        for s in sugorokus:
+            if s.id not in cleared_sugoroku_ids:
+                target_stage = s  # keep updating until we hit the hardest uncleared
+        if not target_stage:
+            # All difficulties cleared
             skipped_cleared += 1
             print(
                 Fore.YELLOW
-                + f"[Omega] [SKIP] Quest {quest_id} "
-                + f"Difficulty {difficulty} already cleared."
+                + f"[Omega] [SKIP] Quest {quest_id} fully cleared."
                 + Fore.RESET
             )
             continue
 
+        stage_id = target_stage.id
+        difficulty = target_stage.difficulty
+
         print(
             Fore.YELLOW
-            + f"[Omega] Running quest {quest_id} - Difficulty {difficulty}"
+            + f"[Omega] Running Quest {quest_id} - Hardest uncleared difficulty {difficulty}"
             + Style.RESET_ALL
         )
 
+        # Try to run the stage
         try:
-            if stage.run(sugoroku.quest_id):
+            if stage.run(quest_id, difficulty):
                 completed += 1
         except Exception as e:
-            print(f'Error happened while trying to clear stage ({e})')
-            print(f'Retrying in 10 seconds...')
+            print(Fore.RED + f"[Omega] Error clearing stage: {e}" + Fore.RESET)
+            print(Fore.YELLOW + "Retrying in 10 seconds..." + Fore.RESET)
             sleep(10)
 
-        # --- Progress ---
+        # Progress bar
         print(
             Fore.WHITE
             + Back.BLUE
@@ -94,8 +102,7 @@ def run():
     # === 4. Summary ===
     print("\n" + Fore.CYAN + Style.BRIGHT + "====== Ω Summary ======" + Style.RESET_ALL)
     print(Fore.YELLOW + f"Total quests scanned: {total}" + Fore.RESET)
-    print(Fore.YELLOW + f"Skipped (already cleared difficulties): {skipped_cleared}" + Fore.RESET)
-    print(Fore.YELLOW + f"Skipped (unavailable): {skipped_unavailable}" + Fore.RESET)
+    print(Fore.YELLOW + f"Skipped (fully cleared quests): {skipped_cleared}" + Fore.RESET)
     print(Fore.GREEN + f"Stages completed: {completed}" + Fore.RESET)
     print(Fore.CYAN + Style.BRIGHT + "========================" + Style.RESET_ALL)
 

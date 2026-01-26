@@ -1,11 +1,11 @@
-import auth
-try:
-    if not auth.zn():
-        import sys
-        sys.exit(0)
-except Exception as e:
-    import sys
-    sys.exit(0)
+#import auth
+#try:
+#    if not auth.zn():
+#        import sys
+#        sys.exit(0)
+#except Exception as e:
+#    import sys
+#    sys.exit(0)
 
 import importlib
 import pkgutil
@@ -22,8 +22,8 @@ class CommandService:
 
     @staticmethod
     def load():
-        prem_cmds = ('eza farm',)
-        prem = auth.zn() == 2
+        prem_cmds = ('change-team','summon','summons','potential','farm medals')
+        prem = 2#auth.zn() == 2
         modules = pkgutil.iter_modules(commands.__path__, commands.__name__ + '.')
         loaded_modules = {
             CommandService.__commands[command_name].__name__: command_name
