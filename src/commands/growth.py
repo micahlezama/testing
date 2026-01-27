@@ -1,13 +1,14 @@
 import FreeSimpleGUI as sg
-from colorama import Fore, Style
+from colorama import Fore, Style, Back
 
 import config
 import network
 
 from models import game
-from commands import area 
+from commands import stage 
 from commands.awaken import awaken_team
 from commands.change_team import build_team
+from utils.dbutils import card_name
 
 
 NAME = 'link-farm'
@@ -167,12 +168,13 @@ def team_aids(locsl, lomc):
         louci.append(mc['id'])
     return louci, loci
 
-cuai = 5
+
+LFSGS = (34004, 34008, 38007, 7010, 34004, 35004, 32002, 38006)
 
 def link_farm():
-    global cuai
-    area.run(cuai, skip=False)
-    cuai = cuai + 1 if cuai < 36 else 5
+    print(Back.YELLOW + Fore.WHITE + Style.BRIGHT + "Running link farm route...")
+    for stg in LFSGS:
+        stage.run(stg) 
 
 def link_fulfilled(locsl):
     ucards = network.get_cards()['cards']
@@ -185,9 +187,12 @@ def link_fulfilled(locsl):
                 for uskl in louls:
                     sid, slv = uskl['id'], uskl['skill_lv']
                     if sid == tsid:
+                        sta = f"Card {ucard['id']} | {card_name(ucard['card_id'])}"
                         if slv < tlv:
+                            print(Back.BLUE + Fore.WHITE + Style.DIM + f"{sta.ljust(40)} | Skill {sid} level {slv}/{tlv}")
                             rr = False
                         else:
+                            print(Back.GREEN + Fore.WHITE + Style.BRIGHT + f"{sta.ljust(40)} | Skill {sid} reached level {slv}/{tlv}")
                             locsl.pop(i)
                         break
                 else:

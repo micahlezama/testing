@@ -41,7 +41,7 @@ def awaken_team(locui:list[int], loci: list[int], ucards):
                 awknums.append(int(ca.num))
             awkrtid = ccar.id
             if card_curexp(ucards, cuid) >= card_exptolv(cid, -1):
-                print(Fore.YELLOW + f'Card {locui[i]} | {card_name(cid)} is trained, starting awakening!')
+                print(Fore.YELLOW + f'Card {locui[i]} | {card_name(cid)} is trained, starting awakening...')
                 ar = network.put_awaken(cuid, awknums, awkrtid) 
             elif not tmtrnd:
                 if train_team(locui, loci, ucards, skip_awakened=True) > 0:
