@@ -47,7 +47,7 @@ def run(stage_id: int, difficulty: Optional[int] = -1, kagi: Optional[int] = Non
 
     timer_start = int(round(time.time(), 0))
 
-    friend = StageService.get_friend(stage_id, lodfc[-1])
+    friend = StageService.get_friend(stage_id, difficulty)
     # --- Get friend and sign info for starting the quest ---
     sign = StageService.get_sign(
         friend=friend,
