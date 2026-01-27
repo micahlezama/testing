@@ -59,11 +59,6 @@ def run(stage_id: int, difficulty: Optional[int] = -1, kagi: Optional[int] = Non
     enc_sign = crypto.encrypt_sign(json.dumps(sign))
     r = StageService.start_stage(stage_id, enc_sign)
 
-    start_time = round(time.time())
-    tts = randint(DLTM, DLTM + 9)
-    time.sleep(tts)
-    finish_time = time.time()
-
     # --- Handle possible API responses ---
     if not isinstance(r, dict):
         print(Fore.RED + f"[Stage] Unexpected response type: {type(r)}" + Style.RESET_ALL)
@@ -95,6 +90,11 @@ def run(stage_id: int, difficulty: Optional[int] = -1, kagi: Optional[int] = Non
         return 0
     else:
         return 0
+
+    start_time = round(time.time())
+    tts = randint(DLTM, DLTM + 9)
+    time.sleep(tts)
+    finish_time = time.time()
 
     # --- Normal stage completion flow ---
     steps = []
