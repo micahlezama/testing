@@ -105,6 +105,13 @@ def run():
 
         print(Fore.GREEN + "\n🎉 All EZAs completed successfully!\n")
 
+    except KeyboardInterrupt:
+        print(
+            Fore.RED
+            + "\n[EZA Farm] ❌ Interrupted by user — returning to main menu..."
+        )
+        return
+
     except Exception as e:
         print(Fore.RED + f"💥 Fatal error in EZA farm: {e}")
         traceback.print_exc()
