@@ -3,7 +3,13 @@ import json
 import config
 import network
 
-NAME = ''
+
+import config
+NAME = "sell_medals"
+DESCRIPTION = "Sells medals."
+CONTEXT = [config.GameContext.GAME]
+
+
 
 
 def run(stage: int):
