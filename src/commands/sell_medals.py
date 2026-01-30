@@ -1,74 +1,118 @@
-import FreeSimpleGUI as sg
-from colorama import Fore, Style
+import json
+import time
+import traceback
+from colorama import Fore
 
 import config
+from commands.complete_zbattle_stage import clear_stage
 import network
 
 
-def sell_medals_command():
-    # Get Medals
-    r = network.get_awakening_items()
+NAME = "zeni"
+DESCRIPTION = "Farms Zeni by clearing EZA Stage 1 up to level 31 if needed, then continues for statue farming."
+CONTEXT = [config.GameContext.GAME]
 
-    # Create list with ID for listbox
-    medal_list = []
-    for medal in reversed(r['awakening_items']):
-        item = config.Medal.find_or_fail(int(medal['awakening_item_id']))
 
-        medal_list.append(item.name + ' [x' + str(medal['quantity']) + '] | ' + str(item.id))
+def run():
+    try:
+        # Load all EZA stages from server
+        lozs = network.get_events()['z_battle_stages']
+        zbattles = [int(zs['id']) for zs in lozs]
 
-    layout = [[sg.Text('Select a medal-')],
-              [sg.Listbox(values=(medal_list), size=(30, 15), key='medal_tally', font=('', 15, 'bold'))],
-              [sg.Text('Amount'), sg.Spin([i for i in range(1, 999)], initial_value=1, size=(5, None))],
-              [sg.Button(button_text='Sell', key='Medal')]]
+        if not zbattles:
+            print(Fore.RED + "❌ No Z-Battle data found.")
+            return
 
-    window = sg.Window('Medal List', keep_on_top=True).Layout(layout)
-    while True:
-        event, values = window.Read()
+        # Always use the FIRST EZA stage
+        stage_id = zbattles[0]
+        print(Fore.MAGENTA + f"\nUsing EZA Stage ID {stage_id} for Zeni farming.")
 
-        if event == None:
-            window.Close()
-            return 0
+        # ======================================================
+        # Get user's current progress for this EZA
+        # ======================================================
+        czbattles = network.get_user_zbattles()
+        current_level = 1
 
-        # Check if medal selected and sell
-        if event == 'Medal':
-            if len(values['medal_tally']) == 0:
-                print(Fore.RED + Style.BRIGHT + "You did not select a medal.")
-                continue
+        for zbattle in czbattles:
+            if int(zbattle['z_battle_stage_id']) == stage_id:
+                current_level = zbattle['max_clear_level'] + 1
+                break
 
-            value = values['medal_tally'][0]
-            medal = value.split(' | ')
-            medalo = medal[1]
-            amount = values[0]
+        print(Fore.YELLOW + f"Your current level for this EZA is: {current_level}")
 
-            medal_id = int(medalo)
-            chunk = int(amount) // 99
-            remainder = int(amount) % 99
+        # ======================================================
+        # If below 31 → clear up to 31
+        # ======================================================
+        if current_level < 31:
+            print(Fore.CYAN + f"\nClearing up to level 31 first (current: {current_level})...\n")
 
-            window.Hide()
-            window.Refresh()
-            for i in range(chunk):
-                r = network.post_awakening_item_exchange(medal_id, 99)
-                if 'error' in r:
-                    print(Fore.RED + Style.BRIGHT + str(r))
-                else:
-                    print(Fore.GREEN + Style.BRIGHT + 'Sold Medals x' + str(99))
+            try:
+                for level in range(current_level, 32):
+                    print(Fore.YELLOW + f"➡️ Clearing Level {level}…")
+                    clear_stage(stage_id, level)
+                    time.sleep(1)
 
-            if remainder > 0:
-                r = network.post_awakening_item_exchange(medal_id, remainder)
-                if 'error' in r:
-                    print(Fore.RED + Style.BRIGHT + str(r))
-                else:
-                    print(Fore.GREEN + Style.BRIGHT + 'Sold Medals x' + str(remainder))
+            except KeyboardInterrupt:
+                print(Fore.RED + "\n[Zeni] ❌ Cancelled — returning to main menu...")
+                return
 
-            # New medal list
-            r = network.get_awakening_items()
+            except Exception as inner_error:
+                print(Fore.RED + f"❌ Error on Level {level}: {inner_error}")
+                traceback.print_exc()
 
-            medal_list[:] = []
-            for medal in reversed(r['awakening_items']):
-                item = config.Medal.find_or_fail(int(medal['awakening_item_id']))
+            print(Fore.GREEN + "\n✅ Reached Level 31!\n")
+            current_level = 31
 
-                medal_list.append(item.name + ' [x' + str(medal['quantity']) + ']' + ' | ' + str(item.id))
+        # ======================================================
+        # Ask user how many statues they want
+        # ======================================================
+        try:
+            amount = input("How many Hercule statues do you want to farm? ").strip()
+        except KeyboardInterrupt:
+            print(Fore.RED + "\n[Zeni] ❌ Cancelled — returning to main menu...")
+            return
 
-            window.FindElement('medal_tally').Update(values=medal_list)
-            window.UnHide()
-            window.Refresh()
+        if not amount.isdigit():
+            print(Fore.RED + "❌ Invalid number.")
+            return
+
+        amount = int(amount)
+
+        if amount <= 0:
+            print(Fore.RED + "❌ Amount must be greater than 0.")
+            return
+
+        # ======================================================
+        # Determine farming range
+        # ======================================================
+        start_level = current_level
+        end_level = start_level + amount - 1
+
+        print(Fore.CYAN + f"\nFarming {amount} statues starting from level {start_level} → {end_level}...\n")
+
+        # ======================================================
+        # Farming loop
+        # ======================================================
+        try:
+            for level in range(start_level, end_level + 1):
+                print(Fore.YELLOW + f"➡️ Farming Level {level}…")
+                clear_stage(stage_id, level)
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+            print(Fore.RED + "\n[Zeni] ❌ Interrupted — returning to main menu...")
+            return
+
+        except Exception as inner_error:
+            print(Fore.RED + f"❌ Error on Level {level}: {inner_error}")
+            traceback.print_exc()
+
+        print(Fore.GREEN + f"\n🎉 Finished farming {amount} statues (Levels {start_level} → {end_level})!\n")
+
+    except KeyboardInterrupt:
+        print(Fore.RED + "\n[Zeni] ❌ Cancelled — returning to main menu...")
+        return
+
+    except Exception as e:
+        print(Fore.RED + f"💥 Fatal error in Zeni farm: {e}")
+        traceback.print_exc()
