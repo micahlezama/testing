@@ -36,7 +36,11 @@ def run():
         # ======================================================
         # 2. User selects which EZA to farm
         # ======================================================
-        choice = input("\nEnter the number of the EZA you want to farm: ").strip()
+        try:
+            choice = input("\nEnter the number of the EZA you want to farm: ").strip()
+        except KeyboardInterrupt:
+            print(Fore.RED + "\n[EZA Exact] ❌ Cancelled — returning to main menu...")
+            return
 
         if not choice.isdigit() or not (1 <= int(choice) <= len(zbattles)):
             print(Fore.RED + "❌ Invalid choice.")
@@ -61,7 +65,11 @@ def run():
         # ======================================================
         # 4. User chooses target level
         # ======================================================
-        target_level = input("Enter the level you want to farm up to (max 999): ").strip()
+        try:
+            target_level = input("Enter the level you want to farm up to (max 999): ").strip()
+        except KeyboardInterrupt:
+            print(Fore.RED + "\n[EZA Exact] ❌ Cancelled — returning to main menu...")
+            return
 
         if not target_level.isdigit():
             print(Fore.RED + "❌ Invalid level.")
@@ -78,19 +86,28 @@ def run():
         # ======================================================
         # 5. Run the levels
         # ======================================================
-        for level in range(current_level, target_level + 1):
-            try:
-                print(Fore.YELLOW + f"➡️ Starting Level {level}…")
-                clear_stage(stage_id, level)
-                time.sleep(1)
+        try:
+            for level in range(current_level, target_level + 1):
+                try:
+                    print(Fore.YELLOW + f"➡️ Starting Level {level}…")
+                    clear_stage(stage_id, level)
+                    time.sleep(1)
 
-            except Exception as inner_error:
-                print(Fore.RED + f"❌ Error on Level {level}: {inner_error}")
-                traceback.print_exc()
-                continue
+                except Exception as inner_error:
+                    print(Fore.RED + f"❌ Error on Level {level}: {inner_error}")
+                    traceback.print_exc()
+                    continue
+
+        except KeyboardInterrupt:
+            print(Fore.RED + "\n[EZA Exact] ❌ Interrupted — returning to main menu...")
+            return
 
         print(Fore.GREEN + f"\n🎉 Finished farming EZA {stage_id} up to level {target_level}!\n")
 
+    except KeyboardInterrupt:
+        print(Fore.RED + "\n[EZA Exact] ❌ Cancelled — returning to main menu...")
+        return
+
     except Exception as e:
-        print(Fore.RED + f"💥 Fatal error in EZA farm: {e}")
+        print(Fore.RED + f"💥 Fatal error in EZA exact: {e}")
         traceback.print_exc()
