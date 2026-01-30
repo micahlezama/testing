@@ -4,6 +4,16 @@ import config
 import network
 from commands.sell_cards import sell_cards_command
 
+import config
+NAME = "sell_medals"
+DESCRIPTION = "Sells medals."
+CONTEXT = [config.GameContext.GAME]
+
+
+
+def run(*args, **kwargs): print("sell_medals not implemented yet")
+
+
 
 def sell_cards__bulk_GUI_command():
     # Provides a GUI to select a range of cards to sell.
