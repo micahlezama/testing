@@ -1,29 +1,48 @@
 import network
-from commands.stage import run as run_stage 
+from commands.stage import run as run_stage
+
+
+import config
+NAME = "sell_medals"
+DESCRIPTION = "Sells medals."
+CONTEXT = [config.GameContext.GAME]
+
+
+
+def run(*args, **kwargs): print("sell_medals not implemented yet")
 
 
 # noinspection SyntaxError
-def complete_unfinished_events_command():
-    events = network.get_events()
-    event_ids = []
-    for event in events['events']:
-        event_ids.append(event['id'])
-    event_ids = sorted(event_ids)
-    try:
-        event_ids.remove(135)
-    except:
-        None
+def complete_unfinished_quest_stages_command():
+    # ## Will eventually use this to streamline stuff
+    # type: (object, object) -> object
 
-    ### Complete areas if they are in the current ID pool
     r = network.get_user_areas()
-    areas = r['user_areas']
-    i = 1
-    for area in areas:
-        if area['area_id'] in event_ids:
-            for stage in area['user_sugoroku_maps']:
-                if stage['cleared_count'] == 0:
-                    run_stage(str(stage['sugoroku_map_id'])[:-1], str(stage['sugoroku_map_id'])[-1])
-                    i += 1
-        if i % 30 == 0:
-            pass
-            #refresh_client_command()
+
+    maps = []
+    for user in r:
+        for map in user['user_sugoroku_maps']:
+            if map['cleared_count'] == 0 and map['sugoroku_map_id'] < 999999 and map['sugoroku_map_id'] > 100:
+                maps.append(map)
+
+    if len(maps) == 0:
+        print("No quests to complete!")
+        print('--------------------------------------------')
+        return 0
+
+    i = 0
+    while i == 0:
+        # print(maps)
+        for map in maps:
+            run_stage(str(map['sugoroku_map_id'])[:-1], str(map['sugoroku_map_id'])[-1])
+
+        maps_check = []
+        for user in r['user_areas']:
+            for map in user['user_sugoroku_maps']:
+                if map['cleared_count'] == 0 and map['sugoroku_map_id'] < 999999 and map['sugoroku_map_id'] > 100:
+                    maps_check.append(map)
+        if maps_check == maps:
+            i = 1
+        else:
+            maps = maps_check
+    return 1
