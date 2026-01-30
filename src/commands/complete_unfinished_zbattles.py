@@ -9,6 +9,16 @@ import crypto
 import network
 
 
+import config
+NAME = "sell_medals"
+DESCRIPTION = "Sells medals."
+CONTEXT = [config.GameContext.GAME]
+
+
+
+def run(*args, **kwargs): print("sell_medals not implemented yet")
+
+
 def complete_unfinished_zbattles_command(kagi=False):
     events = network.get_events()
     try:
