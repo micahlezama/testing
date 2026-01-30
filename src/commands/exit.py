@@ -7,4 +7,4 @@ CONTEXT = [GameContext.AUTH, GameContext.GAME]
 
 def run():
     print('bye-bye king...')
-    exit()
+    return  # <-- DO NOT EXIT THE PROCESS
