@@ -5,6 +5,17 @@ import config
 import network
 
 
+
+NAME = "sell_medals"
+DESCRIPTION = "Sells medals."
+CONTEXT = [config.GameContext.GAME]
+
+
+
+def run(*args, **kwargs): print("sell_medals not implemented yet")
+
+
+
 def change_supporter_command():
     # Needs to have translation properly implemented!
 
