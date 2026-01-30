@@ -5,16 +5,13 @@ import cli
 import config
 from classes.Game import GameEnvironment
 
-
 init(autoreset=True)
 
 
-# before anything a request for new URL & API port is required. - k1mpl0s
 def check_servers(env: GameEnvironment):
     print('Checking servers...')
     try:
         url = env.url + '/ping'
-        # we send an ancient version code that is valid.
         headers = {
             'X-Platform': 'android',
             'X-ClientVersion': env.version_code,
@@ -22,7 +19,6 @@ def check_servers(env: GameEnvironment):
             'X-UserID': '////'
         }
         r = requests.get(url, data=None, headers=headers)
-        # store our requested data into a variable as json.
         store = r.json()
         print(store)
         if 'error' in store:
@@ -35,12 +31,25 @@ def check_servers(env: GameEnvironment):
 
 
 def main():
-    if check_servers(config.game_env):
-        cli.run()
-    else:
+    if not check_servers(config.game_env):
         print(Fore.RED + 'press ENTER to close...')
         input()
         exit()
+
+    # ================================
+    # UNCRASHABLE MENU LOOP
+    # ================================
+    while True:
+        try:
+            cli.run()   # your menu system
+        except KeyboardInterrupt:
+            print(Fore.RED + "\n⛔ Cancelled — returning to menu...\n")
+            # loop continues, menu restarts
+            continue
+        except Exception as e:
+            print(Fore.RED + f"\n💥 Unexpected error in menu: {e}\n")
+            continue
+
 
 if __name__ == "__main__":
     main()
