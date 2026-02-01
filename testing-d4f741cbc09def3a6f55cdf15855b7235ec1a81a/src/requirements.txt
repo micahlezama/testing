@@ -1,0 +1,12 @@
+pyinstaller
+colorama
+cryptography==41.0.7
+pyCryptodome
+FreeSimpleGUI
+requests
+peewee
+selenium
+selenium-wire
+blinker==1.7.0
+flask
+python-dotenv
