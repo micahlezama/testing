@@ -14,9 +14,10 @@ import network
 NAME = "eza exact"
 DESCRIPTION = "Completes selected Extreme Z-Awakenings (Z-Battles) up to a chosen level."
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Zbattle'
 
 def run():
+
     try:
         # Load all EZA stages from server
         lozs = network.get_events()['z_battle_stages']

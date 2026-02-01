@@ -6,7 +6,7 @@ from config import GameContext
 NAME = 'gifts'
 DESCRIPTION = 'Accept gifts'
 CONTEXT = [GameContext.GAME]
-
+CATEGORY = 'Box management'
 
 def run():
     res = network.get_gifts()

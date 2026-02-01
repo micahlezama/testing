@@ -13,7 +13,7 @@ from commands import load
 NAME = 'new'
 DESCRIPTION = 'Create a new Dokkan account'
 CONTEXT = [config.GameContext.AUTH]
-
+CATEGORY = 'Account Management'
 
 def run(file_name: str):
     file_path = Path(config.ROOT_DIR, 'saves', file_name.strip() + '.json')

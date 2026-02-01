@@ -12,7 +12,7 @@ from commands.train import train_team, card_curexp
 NAME = 'awaken'
 DESCRIPTION = 'Select characters to awaken'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Farming'
 
 def awaken_team(locui: list[int], loci: list[int], ucards):
     """

@@ -11,7 +11,7 @@ import network
 NAME = "zeni"
 DESCRIPTION = "Farms Zeni by clearing EZA Stage 1 up to level 31 if needed, then continues for statue farming."
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Selling'
 
 def run():
     try:

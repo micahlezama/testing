@@ -12,7 +12,7 @@ import crypto
 NAME = 'transfer'
 DESCRIPTION = 'Transfer a google account'
 CONTEXT = [config.GameContext.AUTH]
-
+CATEGORY = 'Account management'
 def run(save_as: str):
     while True:
         res = input('Account platform?' + '\n' + 

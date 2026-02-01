@@ -6,7 +6,7 @@ import sqlite3
 NAME = "sell cards"
 DESCRIPTION = "Automatically sell low-rarity cards (N, R, SR) to clean up your box."
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Selling'
 
 def run():
     print("[Sell Junk] Fetching your cards...")

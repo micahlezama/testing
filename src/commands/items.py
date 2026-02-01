@@ -9,7 +9,7 @@ import network
 NAME = 'items'
 DESCRIPTION = 'List your inventory items'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Items and Resources'
 
 def print_title(title: str):
     print('--------------------------------------------')

@@ -17,7 +17,7 @@ NAME = 'stage'
 DESCRIPTION = 'Completes the given stage'
 CONTEXT = [config.GameContext.GAME]
 DLTM = 20
-
+CATEGORY = 'Stage completion'
 
 def run(stage_id: int, difficulty: Optional[int] = -1, kagi: Optional[int] = None):
     """Completes a stage with the given ID and difficulty."""

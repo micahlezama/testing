@@ -7,7 +7,7 @@ from commands import stage
 NAME = 'dragonballs'
 DESCRIPTION = 'Shenron & wishes'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Specialty Items'
 
 def run():
     is_got = 0

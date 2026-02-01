@@ -10,7 +10,7 @@ from services.stage import StageService
 NAME = 'events'
 DESCRIPTION = 'Browse and filter active events by type'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Farming'
 
 def categorize_event(area_name: str, quest_name: str) -> str:
     """Classify events by name pattern."""

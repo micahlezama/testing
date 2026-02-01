@@ -5,6 +5,7 @@ from config import GameContext
 NAME = 'unload'
 DESCRIPTION = 'Disconnect and get back to the login menu'
 CONTEXT = [GameContext.GAME]
+CATEGORY = 'Account management'
 
 
 def run():

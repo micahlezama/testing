@@ -6,7 +6,7 @@ from commands import stage
 NAME = 'potential'
 DESCRIPTION = 'Completes potential stages'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Box management'
 
 def run():
     events = network.get_events()

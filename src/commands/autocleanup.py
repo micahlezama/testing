@@ -7,7 +7,7 @@ from config import GameContext
 NAME = 'auto-sell'
 DESCRIPTION = 'Auto-sell junk'
 CONTEXT = [GameContext.GAME]
-
+CATEGORY = 'Box management'
 def run():
     """Automatically sells low-rarity cards (N and R)."""
     print("[AutoCleanup] Starting automatic card cleanup...")

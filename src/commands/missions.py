@@ -6,6 +6,7 @@ from config import GameContext
 NAME = 'missions'
 DESCRIPTION = 'Accept missions rewards'
 CONTEXT = [GameContext.GAME]
+CATEGORY = 'Box management'
 
 
 def run():

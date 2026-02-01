@@ -14,6 +14,7 @@ import network
 NAME = "eza farm"
 DESCRIPTION = "Completes all Extreme Z-Awakenings (Z-Battles) up to level 31."
 CONTEXT = [config.GameContext.GAME]
+CATEGORY = 'Zbattle'
 
 
 # ======================================================

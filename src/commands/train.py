@@ -11,7 +11,7 @@ from models import game
 NAME = 'train'
 DESCRIPTION = 'Select characters to train'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Box management'
 
 def card_curexp(louc, cui):
     for ucard in louc:

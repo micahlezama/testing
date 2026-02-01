@@ -6,7 +6,7 @@ from config import GameContext
 NAME = 'card capacity'
 DESCRIPTION = 'Increases card capacity by 5'
 CONTEXT = [GameContext.GAME]
-
+CATEGORY = 'Box management'
 
 def run():
     req = network.post_user_capacity_card()

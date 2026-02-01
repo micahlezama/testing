@@ -9,7 +9,7 @@ from typing import Optional, Union
 NAME = 'area'
 DESCRIPTION = 'Completes all quests within a given area'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Farming'
 
 def run(area_id: Optional[Union[int, str]] = None, skip=True):
     try:

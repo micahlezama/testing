@@ -4,7 +4,7 @@ from config import GameContext
 NAME = 'rename'
 DESCRIPTION = 'Rename your account'
 CONTEXT = [GameContext.GAME]
-
+CATEGORY = 'Other'
 
 def run(name: str):
     r = network.put_user(name=name)

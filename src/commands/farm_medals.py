@@ -13,7 +13,7 @@ NAME = 'farm medals'
 DESCRIPTION = 'Collect medals to fully awaken a copy of each units'
 CONTEXT = [GameContext.GAME]
 __RARITY_NAMES = ['N', 'R', 'SR', 'SSR', 'UR', 'LR']
-
+CATEGORY = 'Farming'
 
 def run(*rarities: list[str]):
     try:

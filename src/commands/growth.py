@@ -14,7 +14,7 @@ from utils.dbutils import card_name
 NAME = 'link-farm'
 DESCRIPTION = 'Farm and increase character link skill level'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Farming'
 
 def run():
     try:

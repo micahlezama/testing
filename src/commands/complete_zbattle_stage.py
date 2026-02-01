@@ -17,6 +17,8 @@ from commands.act import run as refill_stamina
 NAME = 'zbattle'
 DESCRIPTION = 'Complete Selected ZBattle Stage'
 CONTEXT = [config.GameContext.GAME]
+CATEGORY = 'Zbattle'
+
 DLTM = 10
 
 

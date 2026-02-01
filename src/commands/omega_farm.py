@@ -9,7 +9,7 @@ from time import sleep
 NAME = 'omega farm'
 DESCRIPTION = 'Completes all quests, skipping cleared or unavailable ones automatically'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Farming'
 
 def run():
     print(Fore.YELLOW + "[Omega] Starting full quest farm..." + Fore.RESET)

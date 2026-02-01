@@ -7,6 +7,7 @@ import network
 NAME = 'cards'
 DESCRIPTION = 'List your cards (filter by rarity or type, e.g. "cards lr" or "cards teq")'
 CONTEXT = [config.GameContext.GAME]
+CATEGORY = 'Box management'
 
 _CARD_TYPES = ['AGL', 'TEQ', 'INT', 'STR', 'PHY']
 _CARD_COLORS = {

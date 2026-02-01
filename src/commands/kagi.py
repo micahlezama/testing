@@ -8,7 +8,7 @@ import config
 NAME = "sell_medals"
 DESCRIPTION = "Sells medals."
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Other'
 
 
 

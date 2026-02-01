@@ -8,7 +8,7 @@ from config import GameContext
 NAME = 'summons'
 DESCRIPTION = 'List available summons'
 CONTEXT = [GameContext.GAME]
-
+CATEGORY = 'Summoning'
 def run():
     res = network.get_gashas()
     for gasha in res['gashas']:

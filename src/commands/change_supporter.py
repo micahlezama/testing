@@ -9,7 +9,7 @@ import network
 NAME = "sell_medals"
 DESCRIPTION = "Sells medals."
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'Box management'
 
 
 def run(*args, **kwargs): print("sell_medals not implemented yet")

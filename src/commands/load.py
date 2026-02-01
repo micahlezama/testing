@@ -12,7 +12,7 @@ from services.database import DatabaseService
 NAME = 'load'
 DESCRIPTION = 'Load a save'
 CONTEXT = [config.GameContext.AUTH]
-
+CATEGORY = 'Account Management'
 
 def run(file_name: str):
     file_path = Path(config.ROOT_DIR, 'saves', file_name + '.json')

@@ -15,6 +15,7 @@ __CHARACTER_NAMES = [*__OTHER_NAMES, *__MAIN_CHARACTERS, *__SECONDARY_CHARACTERS
 NAME = 'tutorial'
 DESCRIPTION = 'Completes the tutorial'
 CONTEXT = [GameContext.GAME]
+CATEGORY = 'Farming'
 
 
 def run():

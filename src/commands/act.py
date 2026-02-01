@@ -6,7 +6,7 @@ from config import GameContext
 NAME = 'act'
 DESCRIPTION = 'Restore max act'
 CONTEXT = [GameContext.GAME]
-
+CATEGORY = 'Farming'
 
 def run():
     stones = network.get_user()['user']['stone']

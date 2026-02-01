@@ -4,7 +4,7 @@ import network
 NAME = 'info'
 DESCRIPTION = 'Account summary'
 CONTEXT = [config.GameContext.GAME]
-
+CATEGORY = 'help'
 
 def run():
     user = network.get_user()

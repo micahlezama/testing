@@ -10,6 +10,7 @@ from config import GameContext
 NAME = 'change-team'
 DESCRIPTION = 'Change your deck'
 CONTEXT = [GameContext.GAME]
+CATEGORY = 'Box management'
 
 def fill_team(locui, ucards, lochid):
     for ucard in ucards:
